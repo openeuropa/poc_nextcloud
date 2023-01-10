@@ -6,8 +6,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "drupal/core": "^9.5",
-        "php": ">=8.0"
+        "php": ">=8.0",
+        "drupal/core": "^9.5"
     },
     "require-dev": {
         "composer/installers": "~1.11",
