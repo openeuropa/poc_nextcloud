@@ -1,5 +1,5 @@
 {
-    "name": "openeuropa/poc-nextcloud",
+    "name": "openeuropa/poc_nextcloud",
     "description": "Proof of concept for an integration of Drupal and Nextcloud.",
     "type": "drupal-module",
     "license": "EUPL-1.2",
