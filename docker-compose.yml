@@ -1,4 +1,5 @@
 version: '2'
+
 services:
   web:
     image: fpfis/httpd-php-dev:8.0
@@ -15,6 +16,7 @@ services:
       PHP_IDE_CONFIG: "serverName=Docker"
       # Enable step debugging for all PHP request. See ./README.md#step-debugging for more information.
       # XDEBUG_SESSION: 1
+
   mysql:
     image: percona/percona-server:5.7
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3
@@ -22,6 +24,32 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     # ports:
     #   - 3306:3306
+
+  # See https://hub.docker.com/_/nextcloud.
+  nextcloud_db:
+    image: mariadb:10.5
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpw
+      - MYSQL_PASSWORD=nextpw
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  nextcloud:
+    image: nextcloud:24-apache
+    restart: always
+    ports:
+      - 8081:80
+    links:
+      - nextcloud_db
+    volumes:
+    environment:
+      - MYSQL_PASSWORD=nextpw
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=nextcloud_db
+
 
 #### Mac users: uncomment the "volumes" key to enable the NFS file sharing. You can find more information about Docker for Mac here: https://github.com/openeuropa/openeuropa/blob/master/docs/starting/tooling.md#using-docker-on-macos
 
