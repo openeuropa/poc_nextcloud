@@ -32,6 +32,7 @@ drupal:
 drupal_project_symlink:
   ignore:
     - ".idea"
+    - "spec"
 
 commands:
   drupal:site-setup:
