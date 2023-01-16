@@ -44,6 +44,7 @@ services:
     links:
       - nextcloud_db
     volumes:
+      - ./resources/install-nextcloud.sh:/usr/bin/install-nextcloud.sh:ro
     environment:
       - MYSQL_PASSWORD=nextpw
       - MYSQL_DATABASE=nextcloud
