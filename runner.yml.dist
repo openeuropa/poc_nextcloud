@@ -29,6 +29,9 @@ drupal:
         - "bower_components"
         - "vendor"
         - "${drupal.root}"
+drupal_project_symlink:
+  ignore:
+    - ".idea"
 
 commands:
   drupal:site-setup:
