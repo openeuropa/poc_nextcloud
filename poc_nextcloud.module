@@ -6,3 +6,23 @@
  */
 
 declare(strict_types = 1);
+
+use Drupal\user\UserInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function poc_nextcloud_user_update(UserInterface $user): void {
+  /** @var \Drupal\poc_nextcloud\Service\UserSync $service */
+  $service = \Drupal::service('poc_nextcloud.user_sync');
+  $service->syncUser($user);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function poc_nextcloud_user_insert(UserInterface $user): void {
+  /** @var \Drupal\poc_nextcloud\Service\UserSync $service */
+  $service = \Drupal::service('poc_nextcloud.user_sync');
+  $service->syncUser($user);
+}
