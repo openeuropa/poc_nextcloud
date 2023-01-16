@@ -1,0 +1,13 @@
+services:
+  poc_nextcloud.connection:
+    class: Drupal\poc_nextcloud\Connection\ApiConnection
+    factory: [Drupal\poc_nextcloud\Connection\NextcloudConnections, 'fromConfig']
+    arguments: ['@http_client', '@config.factory']
+  poc_nextcloud.endpoint.user:
+    class: Drupal\poc_nextcloud\Endpoint\NxUserEndpoint
+    factory: [Drupal\poc_nextcloud\Endpoint\NxUserEndpoint, 'fromConnection']
+    arguments: ['@poc_nextcloud.connection']
+  poc_nextcloud.user_sync:
+    class: Drupal\poc_nextcloud\Service\UserSync
+    factory: [Drupal\poc_nextcloud\Service\UserSync, create]
+    arguments: ['@poc_nextcloud.endpoint.user', '@logger.factory', '@messenger', '@current_user', '@config.factory']
