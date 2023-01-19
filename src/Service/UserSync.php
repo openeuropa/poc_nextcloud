@@ -13,6 +13,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
+use Drupal\poc_nextcloud\Exception\NextcloudNotAvailableException;
 use Drupal\poc_nextcloud\NxEntity\NxUser;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
@@ -45,6 +46,31 @@ class UserSync {
     private AccountProxyInterface $currentUser,
     private ?string $nextcloudUrl,
   ) {}
+
+  /**
+   * Creates Nextcloud users, if the connection is properly configured.
+   *
+   * This can be called from hook_user_update() and hook_user_insert().
+   */
+  public static function syncUserIfNextcloudAvailable(UserInterface $user): void {
+    try {
+      /**
+       * @var \Drupal\poc_nextcloud\Service\UserSync $service
+       */
+      $service = \Drupal::service('poc_nextcloud.user_sync');
+    }
+    catch (NextcloudNotAvailableException $e) {
+      // The connection is not configured.
+      \Drupal::logger('poc_nextcloud')->notice('Nextcloud connection is not properly configured. No Nextcloud account will be created for user @uid. Exception message: @message', [
+        '@uid' => $user->id(),
+        '@message' => $e->getMessage(),
+      ]);
+      // Don't sync the user.
+      return;
+    }
+    // This part is meant to handle its own exceptions.
+    $service->syncUser($user);
+  }
 
   /**
    * Static factory.

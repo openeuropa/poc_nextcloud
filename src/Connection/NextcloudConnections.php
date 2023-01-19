@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Connection;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\poc_nextcloud\Exception\NextcloudNotAvailableException;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -38,7 +39,7 @@ class NextcloudConnections {
     // @todo Can we encrypt the password for storage?
     $pass = $settings->get('nextcloud_pass') ?? '';
     if ($url === '' || $username === '' || $pass === '') {
-      throw new \Exception('Nextcloud configuration is incomplete.');
+      throw new NextcloudNotAvailableException('Nextcloud configuration is incomplete.');
     }
     $url = rtrim($url, '/') . '/';
     return self::fromValues($client, $url, $username, $pass);
@@ -64,10 +65,10 @@ class NextcloudConnections {
    */
   public static function fromValues(ClientInterface $client, string $url, string $username, string $pass): ApiConnection {
     if ($url === '' || $username === '' || $pass === '') {
-      throw new \Exception('Nextcloud configuration is incomplete.');
+      throw new NextcloudNotAvailableException('Nextcloud configuration is incomplete.');
     }
     if (!preg_match('@^(?:http|https)://\w+(?:\.\w+)*/(?:\w+/)*$@', $url)) {
-      throw new \Exception('Nextcloud url does not have the expected format.');
+      throw new NextcloudNotAvailableException('Nextcloud url does not have the expected format.');
     }
     return (new ApiConnection($client, $url))
       ->withAuth($username, $pass)
