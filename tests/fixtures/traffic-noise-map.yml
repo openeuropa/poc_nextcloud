@@ -1,0 +1,55 @@
+get_user:
+  request:
+    method: GET
+    uri: !pattern '@^http://nextcloud:80/ocs/v1.php/cloud/users/.+$@'
+  response:
+    data:
+      ocs:
+        meta:
+          status: ok
+        data:
+          lastLogin: !ignore_if_greater_than 999
+          quota:
+            free: !ignore_if_greater_than 999
+            used: !ignore_if_greater_than 999
+            total: !ignore_if_greater_than 999
+            relative: 0.01
+            quota: -3
+create_group_folder:
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/apps/groupfolders/folders'
+  response:
+    data:
+      ocs:
+        meta:
+          status: ok
+        data:
+          id: !auto_increment_new group_id
+group_folder_path:
+  request:
+    uri: !pattern '@^http://nextcloud:80/apps/groupfolders/folders/(?<group_id>\d+)(?:/\w+)*$@'
+get_group_folder:
+  request:
+    method: GET
+    uri: !pattern '@^http://nextcloud:80/apps/groupfolders/folders/\d+$@'
+  response:
+    data:
+      ocs:
+        meta:
+          status: ok
+        data:
+          id: !auto_increment group_id
+get_group_folders:
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/apps/groupfolders/folders'
+  response:
+    data:
+      ocs:
+        meta:
+          status: ok
+        data:
+          !auto_increment_keys
+          group_id:
+            id: !auto_increment group_id
