@@ -45,41 +45,6 @@ else
     set +e
 fi
 
-# See https://github.com/arawa/workspace/blob/main/README.md#installation
-echo ''
-echo '                                      Download and build groupfolders app'
-echo '-------------------------------------------------------------------------'
-cd /var/www/html/apps
-if [ -d groupfolders ]; then
-  echo 'The groupfolders app is already downloaded and built.'
-else
-  echo ''
-  set -e
-  git clone https://github.com/arawa/groupfolders.git
-  cd groupfolders
-  git checkout allow-admin-delegation-stable21
-  make
-  echo ''
-  set +e
-fi
-
-echo ''
-echo '                                         Download and build workspace app'
-echo '-------------------------------------------------------------------------'
-cd /var/www/html/apps
-if [ -d workspace ]; then
-  echo 'The workspace app is already downloaded and built.'
-else
-  echo ''
-  set -e
-  rm -rf workspace
-  git clone https://github.com/arawa/workspace.git
-  cd workspace
-  make
-  echo ''
-  set +e
-fi
-
 echo ''
 echo '                                                             Install apps'
 echo '-------------------------------------------------------------------------'
@@ -88,7 +53,7 @@ cd /var/www/html
 sudo -E -u www-data ./occ app:install groupfolders
 sudo -E -u www-data ./occ app:install workspace
 sudo -E -u www-data ./occ app:enable groupfolders
-sudo -E -u www-data ./occ app:enable workspace
+sudo -E -u www-data ./occ app:enable --force workspace
 
 echo ''
 echo '                                                        Set configuration'

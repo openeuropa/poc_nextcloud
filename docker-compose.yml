@@ -37,7 +37,7 @@ services:
       - MYSQL_USER=nextcloud
 
   nextcloud:
-    image: nextcloud:24-apache
+    image: nextcloud:25-apache
     restart: always
     ports:
       - 8081:80
