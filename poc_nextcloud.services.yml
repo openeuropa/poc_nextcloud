@@ -1,13 +1,33 @@
 services:
-  poc_nextcloud.connection:
-    class: Drupal\poc_nextcloud\Connection\ApiConnection
-    factory: [Drupal\poc_nextcloud\Connection\NextcloudConnections, 'fromConfig']
+  _defaults:
+    autowire: true
+  logger.channel.poc_nextcloud:
+    parent: logger.channel_base
+    arguments: ['poc_nextcloud']
+  # Services that depend on the nextcloud connection will cause exception if
+  # Nextcloud is not configured.
+  Drupal\poc_nextcloud\Connection\ApiConnectionInterface:
+    factory: [Drupal\poc_nextcloud\Connection\ApiConnection, 'fromConfig']
     arguments: ['@http_client', '@config.factory']
-  poc_nextcloud.endpoint.user:
-    class: Drupal\poc_nextcloud\Endpoint\NxUserEndpoint
-    factory: [Drupal\poc_nextcloud\Endpoint\NxUserEndpoint, 'fromConnection']
-    arguments: ['@poc_nextcloud.connection']
-  poc_nextcloud.user_sync:
-    class: Drupal\poc_nextcloud\Service\UserSync
-    factory: [Drupal\poc_nextcloud\Service\UserSync, create]
-    arguments: ['@poc_nextcloud.endpoint.user', '@logger.factory', '@messenger', '@current_user', '@config.factory']
+  Drupal\poc_nextcloud\Service\NextcloudUrlBuilder:
+    factory: [~, create]
+    arguments: ['@config.factory']
+  Drupal\poc_nextcloud\Endpoint\NxUserEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxWorkspaceEndpoint: {}
+  Drupal\poc_nextcloud\Service\NextcloudGroupHelper: {}
+  Drupal\poc_nextcloud\Service\GroupFolderHelper: {}
+  Drupal\poc_nextcloud\Service\GroupHelper: {}
+  Drupal\poc_nextcloud\EntityHook\UserSync:
+    arguments:
+      # Explicitly set arguments that cannot be autowired.
+      # See https://www.drupal.org/project/drupal/issues/3336739
+      Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
+  poc_nextcloud.entity_hook_dispatcher:
+    class: Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher
+    factory: [~, fromServiceIdsWithEmptyFallback]
+    arguments:
+      - '@service_container'
+      -
+        user: '@Drupal\poc_nextcloud\EntityHook\UserSync'

@@ -11,10 +11,9 @@ use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use PHPUnit\Framework\Assert;
 
 return static function (ApiConnectionInterface $connection) {
-  $endpoint = NxGroupFolderEndpoint::fromConnection($connection);
+  $endpoint = new NxGroupFolderEndpoint($connection);
 
-  $stub = NxGroupFolder::createWithMountPoint('example');
-  $id = $endpoint->insert($stub);
+  $id = $endpoint->insertWithMountPoint('example');
 
   try {
     Assert::assertIsInt($id);
@@ -22,7 +21,6 @@ return static function (ApiConnectionInterface $connection) {
     $folder = $endpoint->load($id);
 
     Assert::assertInstanceOf(NxGroupFolder::class, $folder);
-    Assert::assertFalse($folder->isStub());
     Assert::assertSame($id, $folder->getId());
     Assert::assertSame('example', $folder->getMountPoint());
 

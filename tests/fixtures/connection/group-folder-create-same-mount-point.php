@@ -11,17 +11,15 @@
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
-use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use PHPUnit\Framework\Assert;
 
 return static function (ApiConnectionInterface $connection): void {
-  $endpoint = NxGroupFolderEndpoint::fromConnection($connection);
+  $endpoint = new NxGroupFolderEndpoint($connection);
 
   $ids = [];
   try {
-    $stub = NxGroupFolder::createWithMountPoint('example');
-    $ids[] = $first_id = $endpoint->insert($stub);
-    $ids[] = $second_id = $endpoint->insert($stub);
+    $ids[] = $first_id = $endpoint->insertWithMountPoint('example');
+    $ids[] = $second_id = $endpoint->insertWithMountPoint('example');
     Assert::assertNotSame($first_id, $second_id);
   }
   finally {

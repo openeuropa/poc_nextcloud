@@ -1,0 +1,10 @@
+# Use machine names and labels that produce a nice alphabetic order in the UI
+# and in exported configuration.
+nextcloud workspace join:
+  title: 'Nextcloud workspace: Read, write and share files'
+  description: 'Use the associated Nextcloud workspace'
+nextcloud workspace manage:
+  title: 'Nextcloud workspace: Manage access per file'
+  description: 'Manage the associated Nextcloud workspace'
+  # @todo Determine if this really needs to be restricted.
+  restrict access: TRUE

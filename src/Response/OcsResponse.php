@@ -118,7 +118,7 @@ class OcsResponse {
    *
    * @return $this
    *
-   * @throws \Drupal\poc_nextcloud\Exception\FailureResponseException
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   This is a failure response.
    */
   public function throwIfFailure(): static {
@@ -126,6 +126,19 @@ class OcsResponse {
       throw new FailureResponseException($this->statuscode, $this->message);
     }
     return $this;
+  }
+
+  /**
+   * Returns null if data has a specific value.
+   *
+   * @param mixed $data
+   *   Value for which to return NULL.
+   *
+   * @return $this|null
+   *   NULL or the response object.
+   */
+  public function nullIfData(mixed $data): ?static {
+    return $this->data === $data ? NULL : $this;
   }
 
   /**

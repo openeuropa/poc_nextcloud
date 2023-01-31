@@ -7,18 +7,17 @@
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
-use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use PHPUnit\Framework\Assert;
 
 return static function (ApiConnectionInterface $connection): void {
-  $endpoint = NxGroupFolderEndpoint::fromConnection($connection);
+  $endpoint = new NxGroupFolderEndpoint($connection);
 
   $ids = [];
   try {
     $ids_before = $endpoint->loadIds();
-    $ids[] = $endpoint->insert(NxGroupFolder::createWithMountPoint('example'));
-    $ids[] = $endpoint->insert(NxGroupFolder::createWithMountPoint('example_1'));
-    $ids[] = $endpoint->insert(NxGroupFolder::createWithMountPoint('example_2'));
+    $ids[] = $endpoint->insertWithMountPoint('example');
+    $ids[] = $endpoint->insertWithMountPoint('example_1');
+    $ids[] = $endpoint->insertWithMountPoint('example_2');
     $ids_expected = [...$ids_before, ...$ids];
     $ids_after = $endpoint->loadIds();
     sort($ids_expected);

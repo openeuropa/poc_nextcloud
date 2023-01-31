@@ -4,7 +4,12 @@ poc_nextcloud.settings:
   mapping:
     nextcloud_url:
       type: string
-      label: 'Url to the nextcloud instance.'
+      label: 'Url to the nextcloud instance, for back-end requests.'
+    # Allow a web url to be different from the server-side url, even if they
+    # point to the same Nextcloud instance.
+    nextcloud_web_url:
+      type: string
+      label: 'Url to the nextcloud instance, for front-end links.'
     nextcloud_user:
       type: string
       label: 'Username for nextcloud API requests.'

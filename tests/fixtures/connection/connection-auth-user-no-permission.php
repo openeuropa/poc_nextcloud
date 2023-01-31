@@ -7,18 +7,17 @@
 
 use Drupal\poc_nextcloud\Connection\ApiConnection;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
-use Drupal\poc_nextcloud\NxEntity\NxUser;
 use PHPUnit\Framework\Assert;
 
 return function (ApiConnection $connection): void {
-  $endpoint = NxUserEndpoint::fromConnection($connection);
+  $endpoint = new NxUserEndpoint($connection);
   $username = 'testuser';
   $pass = 'tes012fe552r008pw';
   try {
-    $endpoint->insert(NxUser::createStubWithPass($username, $pass));
+    $endpoint->insertWithPassword($username, $pass);
     $response = $connection
       ->withAuth($username, $pass)
-      ->request('GET', 'ocs/v1.php/cloud/users');
+      ->requestOcs('GET', 'ocs/v1.php/cloud/users');
     Assert::assertTrue($response->isFailure());
     Assert::assertSame(403, $response->getStatusCode());
     Assert::assertSame('Logged in user must be at least a sub admin', $response->getMessage());

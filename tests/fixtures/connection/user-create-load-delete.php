@@ -11,7 +11,7 @@ use Drupal\poc_nextcloud\NxEntity\NxUser;
 use PHPUnit\Framework\Assert;
 
 return function (ApiConnectionInterface $connection): void {
-  $endpoint = NxUserEndpoint::fromConnection($connection);
+  $endpoint = new NxUserEndpoint($connection);
 
   $name = 'Aurelie';
   $email = 'Aurelie@example.com';
@@ -22,17 +22,12 @@ return function (ApiConnectionInterface $connection): void {
   Assert::assertNull($endpoint->load($name));
 
   try {
-    $stub_user = NxUser::createStubWithEmail(
-      $name,
-      $email,
-    );
-    $insert_id = $endpoint->insert($stub_user);
+    $insert_id = $endpoint->insertWithEmail($name, $email);
     Assert::assertSame($name, $insert_id);
 
     $user = $endpoint->load($name);
 
     Assert::assertInstanceOf(NxUser::class, $user);
-    Assert::assertFalse($user->isStub());
     Assert::assertSame($name, $user->getId());
     Assert::assertSame(TRUE, $user->isEnabled());
     Assert::assertSame($name, $user->getDisplayName());

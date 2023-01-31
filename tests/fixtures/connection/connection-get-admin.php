@@ -9,7 +9,7 @@ use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use PHPUnit\Framework\Assert;
 
 return function (ApiConnectionInterface $connection): void {
-  $response = $connection->request('GET', 'ocs/v1.php/cloud/users/admin');
+  $response = $connection->requestOcs('GET', 'ocs/v1.php/cloud/users/admin');
   Assert::assertSame(100, $response->getStatusCode());
   Assert::assertSame('OK', $response->getMessage());
   Assert::assertNull($response->getItemsperpage());

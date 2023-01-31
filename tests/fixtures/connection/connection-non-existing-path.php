@@ -11,7 +11,7 @@ use PHPUnit\Framework\Assert;
 
 return function (ApiConnectionInterface $connection): void {
   try {
-    $connection->request('GET', 'non-existing-path');
+    $connection->requestOcs('GET', 'non-existing-path');
     Assert::fail('Expected an exception.');
   }
   catch (ResponseInvalidJsonException) {

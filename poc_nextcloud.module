@@ -2,24 +2,45 @@
 
 /**
  * @file
- * OpenEuropa module.
+ * File with hook implementations.
  */
 
 declare(strict_types = 1);
 
-use Drupal\poc_nextcloud\Service\UserSync;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\user\UserInterface;
-
-/**
- * Implements hook_ENTITY_TYPE_update().
- */
-function poc_nextcloud_user_update(UserInterface $user): void {
-  UserSync::syncUserIfNextcloudAvailable($user);
-}
 
 /**
  * Implements hook_ENTITY_TYPE_insert().
  */
 function poc_nextcloud_user_insert(UserInterface $user): void {
-  UserSync::syncUserIfNextcloudAvailable($user);
+  _poc_nextcloud_entity_hook($user, 'insert');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function poc_nextcloud_user_update(UserInterface $user): void {
+  _poc_nextcloud_entity_hook($user, 'update');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function poc_nextcloud_user_delete(UserInterface $user): void {
+  _poc_nextcloud_entity_hook($user, 'delete');
+}
+
+/**
+ * Calls the entity hook dispatcher.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   Entity that triggered the event.
+ * @param string $op
+ *   Verb from the hook name, e.g. 'presave', 'insert', 'update', 'delete'.
+ */
+function _poc_nextcloud_entity_hook(EntityInterface $entity, string $op): void {
+  /** @var \Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher $service */
+  $service = \Drupal::service('poc_nextcloud.entity_hook_dispatchere');
+  $service($entity, $op);
 }

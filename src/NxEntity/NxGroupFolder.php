@@ -4,101 +4,53 @@ declare(strict_types = 1);
 
 namespace Drupal\poc_nextcloud\NxEntity;
 
-use Drupal\poc_nextcloud\Exception\MalformedDataException;
-
 /**
- * Value object for a group folder loaded from the API.
+ * Value object for a Nextcloud group folder loaded from the API.
+ *
+ * This assumes the 'groupfolders' app is installed in Nextcloud.
  */
-class NxGroupFolder implements NxEntityInterface {
+class NxGroupFolder {
 
   /**
    * Constructor.
    *
-   * @param int|null $id
-   *   Id, or NULL if this is a stub group folder.
+   * @param int $id
+   *   Group folder id.
    * @param string $mountPoint
    *   Mount point.
-   * @param array $groups
-   *   Groups.
-   * @param int|null $quota
+   * @param int[] $groupsPerms
+   *   Groups permission masks by group id.
+   * @param int $quota
    *   Quota.
-   * @param int|null $size
+   * @param int $size
    *   Size.
-   * @param bool|null $acl
-   *   ACL.
-   * @param array $manage
-   *   Manage.
+   * @param bool $acl
+   *   TRUE, if per-file ACL is enabled for this group folder.
+   * @param string[][] $manageAcl
+   *   Group and users with permission to manage access on individual files.
+   *   First key is the type ('group' or 'user'), second key is the id, value is
+   *   the display name.
+   *   Example: $['group'][$group_id] = $group_display_name.
+   *   The format is different than the API response, because it is more useful
+   *   this way.
    */
-  private function __construct(
-    private ?int $id,
+  public function __construct(
+    private int $id,
     private string $mountPoint,
-    private array $groups = [],
-    private ?int $quota = NULL,
-    private ?int $size = NULL,
-    private ?bool $acl = NULL,
-    private array $manage = [],
+    private array $groupsPerms,
+    private int $quota,
+    private int $size,
+    private bool $acl,
+    private array $manageAcl,
   ) {}
 
   /**
-   * Creates a new user object from response data.
+   * Gets the group folder id.
    *
-   * @param array $data
-   *   Response data from a request to load a group folder.
-   *
-   * @return self
-   *   New instance.
-   *
-   * @throw MalformedDataExceptio
+   * @return int
+   *   Id of the group folder.
    */
-  public static function fromResponseData(array $data): self {
-    if (!isset($data['id'])) {
-      throw new MalformedDataException('Missing group folder id in response data.');
-    }
-    if (!isset($data['mount_point'])) {
-      throw new MalformedDataException('Missing group folder mount point in response data.');
-    }
-    try {
-      return new self(
-        $data['id'],
-        $data['mount_point'],
-        $data['groups'] ?? [],
-        self::parseIntIfPossible($data['quota'] ?? NULL),
-        self::parseIntIfPossible($data['size'] ?? NULL),
-        $data['acl'] ?? NULL,
-        $data['manage'] ?? [],
-      );
-    }
-    catch (\TypeError $e) {
-      throw new MalformedDataException($e->getMessage(), 0, $e);
-    }
-  }
-
-  /**
-   * Creates a stub object with a given mount point.
-   *
-   * @param string $mountpoint
-   *   Mount point.
-   *
-   * @return self
-   *   New instance.
-   */
-  public static function createWithMountPoint(string $mountpoint): self {
-    return new self(NULL, $mountpoint);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function exportForInsert(): array {
-    return array_filter([
-      'mountpoint' => $this->mountPoint,
-    ], fn ($value) => isset($value));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getId(): string|int|null {
+  public function getId(): int {
     return $this->id;
   }
 
@@ -113,93 +65,106 @@ class NxGroupFolder implements NxEntityInterface {
   }
 
   /**
-   * Gets the groups.
+   * Gets group ids linked to the group folder.
    *
-   * @return array
-   *   Groups.
-   *
-   * @todo Add more information, or remove.
+   * @return string[]
+   *   Group ids.
    */
-  public function getGroups(): array {
-    return $this->groups;
+  public function getGroupIds(): array {
+    return array_keys($this->groupsPerms);
+  }
+
+  /**
+   * Gets group ids with permissions.
+   *
+   * @return int[]
+   *   Group permission bitmasks by group id.
+   */
+  public function getGroupsPerms(): array {
+    return $this->groupsPerms;
   }
 
   /**
    * Gets the quota.
    *
-   * @return int|null
-   *   Quota.
+   * @return int
+   *   Quota as found in filecache table.
    *
    * @todo Add more information, or remove.
    */
-  public function getQuota(): ?int {
+  public function getQuota(): int {
     return $this->quota;
   }
 
   /**
    * Gets the size.
    *
-   * @return int|null
-   *   Size, or NULL if not provided.
+   * @return int
+   *   Size as found in filecache table.
    *
    * @todo Add more information, or remove.
    */
-  public function getSize(): ?int {
+  public function getSize(): int {
     return $this->size;
   }
 
   /**
-   * Gets the access control setting.
+   * Tells whether advanced ACL is enabled for this group folder.
    *
-   * @return bool|null
-   *   Access control setting.
-   *
-   * @todo Add more information, or remove.
+   * @return bool
+   *   TRUE if enabled, FALSE if not.
    */
-  public function getAcl(): ?bool {
+  public function isAclEnabled(): bool {
     return $this->acl;
   }
 
   /**
-   * Gets the 'manage' setting.
+   * Gets groups and users that can manage access per file.
    *
-   * @return array
-   *   Setting for 'manage'.
-   *
-   * @todo Add more information, or remove.
+   * @return string[][]
+   *   Group and users with permission to manage access on individual files.
+   *   First key is the type ('group' or 'user'), second key is the id, value is
+   *   the display name.
+   *   Example: $['group'][$group_id] = $group_display_name.
    */
-  public function getManage(): array {
-    return $this->manage;
+  public function getManageAcl(): array {
+    return $this->manageAcl;
   }
 
   /**
-   * Converts stringified integers to true integers.
+   * Checks whether a group gives permission to manage access per file.
    *
-   * @param mixed $value
-   *   A value which could be a stringified integer, e.g. "6".
+   * @param string $group_id
+   *   Group id.
    *
-   * @return mixed
-   *   The converted value, e.g. 6 for "6".
-   *   If the value was not a stringified integer, the original value is
-   *   returned.
+   * @return bool
+   *   TRUE if the group has access.
    */
-  private static function parseIntIfPossible(mixed $value): mixed {
-    if (is_string($value)) {
-      if ($value === '') {
-        return NULL;
-      }
-      if ((string) (int) $value === $value) {
-        return (int) $value;
-      }
-    }
-    return $value;
+  public function hasManageAclGroup(string $group_id): bool {
+    return isset($this->manageAcl['group'][$group_id]);
   }
 
   /**
-   * {@inheritdoc}
+   * Checks whether a user has permission to manage access per file.
+   *
+   * @param string $user_id
+   *   User id.
+   *
+   * @return bool
+   *   TRUE if the group has access.
    */
-  public function isStub(): bool {
-    return $this->id === NULL;
+  public function hasManageAclUser(string $user_id): bool {
+    return isset($this->manageAcl['user'][$user_id]);
+  }
+
+  /**
+   * Gets groups with access to manage access per file.
+   *
+   * @return string[]
+   *   Group display names by group id.
+   */
+  public function getManageAclGroupIds(): array {
+    return array_keys($this->manageAcl['group'] ?? []);
   }
 
 }

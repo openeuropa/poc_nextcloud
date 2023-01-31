@@ -8,11 +8,10 @@
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Exception\FailureResponseException;
-use Drupal\poc_nextcloud\NxEntity\NxUser;
 use PHPUnit\Framework\Assert;
 
 return function (ApiConnectionInterface $connection): void {
-  $endpoint = NxUserEndpoint::fromConnection($connection);
+  $endpoint = new NxUserEndpoint($connection);
 
   $name = 'Fabio';
   $email = $name . '@example.com';
@@ -20,19 +19,14 @@ return function (ApiConnectionInterface $connection): void {
   // Make sure user does not already exist.
   Assert::assertNull($endpoint->load($name));
 
-  $stub_user = NxUser::createStubWithEmail(
-    $name,
-    $email,
-  );
-
   try {
     Assert::assertSame(
       $name,
-      $endpoint->insert($stub_user),
+      $endpoint->insertWithEmail($name, $email),
     );
 
     try {
-      $endpoint->insert($stub_user);
+      $endpoint->insertWithEmail($name, $email);
       Assert::fail('Creating an already existing user should result in exception.');
     }
     catch (FailureResponseException $e) {

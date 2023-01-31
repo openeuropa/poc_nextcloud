@@ -7,11 +7,10 @@
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
-use Drupal\poc_nextcloud\NxEntity\NxUser;
 use PHPUnit\Framework\Assert;
 
 return function (ApiConnectionInterface $connection): void {
-  $endpoint = NxUserEndpoint::fromConnection($connection);
+  $endpoint = new NxUserEndpoint($connection);
 
   $ids_before = $endpoint->loadIds();
   Assert::assertIsArray($ids_before);
@@ -25,11 +24,7 @@ return function (ApiConnectionInterface $connection): void {
 
   try {
     foreach ($names as $name) {
-      $stub_user = NxUser::createStubWithEmail(
-        $name,
-        $name . '@example.com',
-      );
-      $insert_id = $endpoint->insert($stub_user);
+      $insert_id = $endpoint->insertWithEmail($name, $name . '@example.com');
       Assert::assertSame($name, $insert_id);
     }
 
