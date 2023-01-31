@@ -10,9 +10,6 @@ Fade this terminal to the background.
 In another terminal, run these commands:
 
 ```
-# Install additional apps and settings in Nextcloud.
-docker-compose exec nextcloud sh /usr/bin/install-nextcloud.sh
-
 # Install Drupal.
 docker-compose exec web composer install
 docker-compose exec web ./vendor/bin/run drupal:site-install
