@@ -13,6 +13,7 @@
     },
     "require-dev": {
         "composer/installers": "~1.11",
+        "drupal/admin_toolbar": "^3.3",
         "drupal/config_devel": "~1.2",
         "drupal/core-composer-scaffold": "^9.4",
         "drupal/core-dev": "^9.5",
