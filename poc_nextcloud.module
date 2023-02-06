@@ -41,6 +41,6 @@ function poc_nextcloud_user_delete(UserInterface $user): void {
  */
 function _poc_nextcloud_entity_hook(EntityInterface $entity, string $op): void {
   /** @var \Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher $service */
-  $service = \Drupal::service('poc_nextcloud.entity_hook_dispatchere');
+  $service = \Drupal::service('poc_nextcloud.entity_hook_dispatcher');
   $service($entity, $op);
 }

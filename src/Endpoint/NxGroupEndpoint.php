@@ -51,6 +51,44 @@ class NxGroupEndpoint {
   }
 
   /**
+   * Sets the group display name.
+   *
+   * @param string $group_id
+   *   Group id.
+   * @param string $display_name
+   *   Display name.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   */
+  public function setDisplayName(string $group_id, string $display_name): void {
+    $this->updateField($group_id, 'displayname', $display_name);
+  }
+
+  /**
+   * Updates a specific field in the group.
+   *
+   * The only supported field is 'displayname', so therefore it is not useful to
+   * expose this as a public method.
+   *
+   * @param string $group_id
+   *   Group id.
+   * @param string $key
+   *   Field name.
+   * @param string $value
+   *   New field value.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   */
+  private function updateField(string $group_id, string $key, string $value): void {
+    $this->groupPath($group_id)
+      ->requestOcs('PUT', '', [
+        'key' => $key,
+        'value' => $value,
+      ])
+      ->throwIfFailure();
+  }
+
+  /**
    * Deletes a group.
    *
    * @param string $group_id

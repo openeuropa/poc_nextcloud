@@ -22,6 +22,6 @@ services:
     arguments:
       - '@service_container'
       -
-        user: '@Drupal\poc_nextcloud_group_folder\EntityHook\UserSync'
-        group: '@Drupal\poc_nextcloud_group_folder\EntityHook\GroupSync'
-        group_content: '@Drupal\poc_nextcloud_group_folder\EntityHook\GroupContentSync'
+        user: Drupal\poc_nextcloud_group_folder\EntityHook\UserSync
+        group: Drupal\poc_nextcloud_group_folder\EntityHook\GroupSync
+        group_content: Drupal\poc_nextcloud_group_folder\EntityHook\GroupContentSync

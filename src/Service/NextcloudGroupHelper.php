@@ -28,8 +28,8 @@ class NextcloudGroupHelper {
   /**
    * Sets the groups that are meant to exist in a given namespace.
    *
-   * @param string[] $group_ids
-   *   Expected group ids.
+   * @param string[] $group_display_names
+   *   Expected group display names by group id.
    * @param string $regex
    *   Regular expression that defines the namespace.
    *   Any groups that match this pattern but are not part of the $group_ids
@@ -38,18 +38,24 @@ class NextcloudGroupHelper {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   Something went wrong in one of the API calls.
    */
-  public function setGroups(array $group_ids, string $regex): void {
+  public function setGroups(array $group_display_names, string $regex): void {
     $existing_ids = $this->groupEndpoint->loadIds();
     $existing_ids = preg_grep($regex, $existing_ids);
+    $expected_ids = array_keys($group_display_names);
 
-    $group_ids_to_delete = array_diff($existing_ids, $group_ids);
+    $group_ids_to_delete = array_diff($existing_ids, $expected_ids);
     foreach ($group_ids_to_delete as $group_id) {
       $this->groupEndpoint->delete($group_id);
     }
 
-    $group_ids_to_create = array_diff($group_ids, $existing_ids);
+    $group_ids_to_create = array_diff($expected_ids, $existing_ids);
     foreach ($group_ids_to_create as $group_id) {
-      $this->groupEndpoint->insert($group_id);
+      $this->groupEndpoint->insert($group_id, $group_display_names[$group_id]);
+    }
+
+    // Update the already-existing groups.
+    foreach (array_intersect($expected_ids, $existing_ids) as $group_id) {
+      $this->groupEndpoint->setDisplayName($group_id, $group_display_names[$group_id]);
     }
   }
 

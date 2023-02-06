@@ -16,12 +16,12 @@ services:
     arguments:
       Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
   Drupal\poc_nextcloud_group_workspace\EntityHook\GroupContentSync:
-  poc_nextcloud_group_folder.entity_hook_dispatcher:
+  poc_nextcloud_group_workspace.entity_hook_dispatcher:
     class: Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher
     factory: [~, fromServiceIdsWithEmptyFallback]
     arguments:
       - '@service_container'
       -
-        user: '@Drupal\poc_nextcloud_group_workspace\EntityHook\UserSync'
-        group: '@Drupal\poc_nextcloud_group_workspace\EntityHook\GroupSync'
-        group_content: '@Drupal\poc_nextcloud_group_workspace\EntityHook\GroupContentSync'
+        user: Drupal\poc_nextcloud_group_workspace\EntityHook\UserSync
+        group: Drupal\poc_nextcloud_group_workspace\EntityHook\GroupSync
+        group_content: Drupal\poc_nextcloud_group_workspace\EntityHook\GroupContentSync

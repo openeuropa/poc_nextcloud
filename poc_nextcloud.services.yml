@@ -30,4 +30,4 @@ services:
     arguments:
       - '@service_container'
       -
-        user: '@Drupal\poc_nextcloud\EntityHook\UserSync'
+        user: Drupal\poc_nextcloud\EntityHook\UserSync

@@ -110,6 +110,6 @@ function poc_nextcloud_group_folder_group_role_delete(GroupRoleInterface $group_
  */
 function _poc_nextcloud_group_folder_entity_hook(EntityInterface $entity, string $op): void {
   /** @var \Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher $service */
-  $service = \Drupal::service('poc_nextcloud_group_folder.entity_sync');
+  $service = \Drupal::service('poc_nextcloud_group_folder.entity_hook_dispatcher');
   $service($entity, $op);
 }

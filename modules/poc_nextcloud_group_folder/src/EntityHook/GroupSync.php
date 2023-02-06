@@ -173,18 +173,25 @@ class GroupSync {
     $this->groupFolderEndpoint->setMountPoint($group_folder->getId(), $label);
     $group_id_regex = sprintf('@^GROUPFOLDER-%s-\w+-\w+$@', $group_folder_id);
     $bitmasks_by_group_id = [];
-    $permissions_antimap = array_flip(GroupFolderConstants::PERMISSIONS_MAP);
+    $group_display_names = [];
+    $permissions_by_bitmask = array_flip(GroupFolderConstants::PERMISSIONS_MAP);
     foreach ($group->getGroupType()->getRoles() as $role) {
-      $role_permissions_antimap = array_intersect($permissions_antimap, $role->getPermissions());
-      if (!$role_permissions_antimap) {
+      $role_permissions_by_bitmask = array_intersect($permissions_by_bitmask, $role->getPermissions());
+      if (!$role_permissions_by_bitmask) {
         continue;
       }
-      $role_bitmask = DataUtil::bitwiseOr(...array_keys($role_permissions_antimap));
+      $role_bitmask = DataUtil::bitwiseOr(...array_keys($role_permissions_by_bitmask));
       $group_id = 'GROUPFOLDER-' . $group_folder_id . '-' . $role->id();
       $bitmasks_by_group_id[$group_id] = $role_bitmask;
+      // @todo Come up with a nicer naming pattern.
+      $perm_string = implode('', array_intersect_key(
+        GroupFolderConstants::PERMISSIONS_SHORTCODE_MAP,
+        $role_permissions_by_bitmask,
+      ));
+      $group_display_names[$group_id] = 'D:G:' . $group->id() . ':' . $perm_string . ': ' . $label . ': ' . $role->label();
     }
     $this->groupHelper->setGroups(
-      array_keys($bitmasks_by_group_id),
+      $group_display_names,
       $group_id_regex,
     );
     $this->groupFolderHelper->setGroups(
