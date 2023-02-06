@@ -23,7 +23,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Field formatter for Nextcloud workspace or group folder reference.
+ * Field formatter for a Nextcloud group folder reference.
  *
  * Note that the field types are only available by enabling one of the
  * submodules.

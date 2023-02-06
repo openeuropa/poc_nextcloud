@@ -12,13 +12,13 @@ use Drupal\group\Entity\GroupInterface;
 class GroupToGroupFolderMap {
 
   /**
-   * Determines if the group should and can have a workspace.
+   * Determines if the group should and can have a group folder.
    *
    * @param \Drupal\group\Entity\GroupInterface $group
    *   The group.
    *
    * @return bool
-   *   TRUE if a workspace can and should be attached to the group.
+   *   TRUE if a Drupal group should have a group folder.
    */
   public function groupShouldHaveGroupFolder(GroupInterface $group): bool {
     $field_name = $this->findFieldName($group);
@@ -48,14 +48,14 @@ class GroupToGroupFolderMap {
   }
 
   /**
-   * Sets the workspace id for a given group.
+   * Sets the group folder id for a given group.
    *
    * This only sets the value in the group object, it does not call ->save().
    *
    * @param \Drupal\group\Entity\GroupInterface $group
    *   Drupal group.
    * @param int|null $group_folder_id
-   *   The workspace id, or NULL to remove it.
+   *   The group folder id, or NULL to unset the reference.
    */
   public function groupSetGroupFolderId(GroupInterface $group, ?int $group_folder_id): void {
     $field_name = $this->findFieldName($group);
