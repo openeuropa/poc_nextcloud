@@ -10,8 +10,8 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\extra_field\Plugin\ExtraFieldDisplayFormattedBase;
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
-use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
+use Drupal\poc_nextcloud\Service\NextcloudUserMap;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Yaml\Yaml;
@@ -43,20 +43,20 @@ class NextcloudAccountInfoExtraField extends ExtraFieldDisplayFormattedBase impl
    *   Plugin id.
    * @param array $plugin_definition
    *   Plugin definition.
-   * @param \Drupal\poc_nextcloud\Endpoint\NxUserEndpoint $userEndpoint
-   *   User endpoint.
    * @param \Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint $groupEndpoint
    *   Group endpoint.
    * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudLinkBuilder
    *   Service to build links to Nextcloud.
+   * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
+   *   Service to get Nextcloud user for Drupal user.
    */
   public function __construct(
     array $configuration,
     string $plugin_id,
     array $plugin_definition,
-    private NxUserEndpoint $userEndpoint,
     private NxGroupEndpoint $groupEndpoint,
     private NextcloudUrlBuilder $nextcloudLinkBuilder,
+    private NextcloudUserMap $nextcloudUserMap,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -64,14 +64,19 @@ class NextcloudAccountInfoExtraField extends ExtraFieldDisplayFormattedBase impl
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): self {
     return new self(
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get(NxUserEndpoint::class),
       $container->get(NxGroupEndpoint::class),
       $container->get(NextcloudUrlBuilder::class),
+      $container->get(NextcloudUserMap::class),
     );
   }
 
@@ -103,8 +108,7 @@ class NextcloudAccountInfoExtraField extends ExtraFieldDisplayFormattedBase impl
     if (!$entity instanceof UserInterface) {
       return [];
     }
-    $name = $entity->getAccountName();
-    $nextcloud_user = $this->userEndpoint->load($name);
+    $nextcloud_user = $this->nextcloudUserMap->getNextcloudUser($entity);
     if ($nextcloud_user === NULL) {
       return [];
     }

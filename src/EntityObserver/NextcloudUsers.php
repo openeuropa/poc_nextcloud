@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\NxEntity\NxUser;
+use Drupal\poc_nextcloud\Service\NextcloudUserMap;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 
@@ -21,11 +22,14 @@ class NextcloudUsers implements EntityObserverInterface {
    *
    * @param \Drupal\poc_nextcloud\Endpoint\NxUserEndpoint $userEndpoint
    *   Nextcloud API endpoint for user accounts.
+   * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
+   *   Service to get Nextcloud user ids for Drupal users.
    * @param \Psr\Log\LoggerInterface $logger
    *   Logger channel.
    */
   public function __construct(
     private NxUserEndpoint $userEndpoint,
+    private NextcloudUserMap $nextcloudUserMap,
     private LoggerInterface $logger,
   ) {}
 
@@ -53,26 +57,21 @@ class NextcloudUsers implements EntityObserverInterface {
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   public function userOp(UserInterface $user, string $op): void {
-    $name = $user->getAccountName();
+    $nextcloud_user_id = $this->nextcloudUserMap->getNextcloudUserId($user);
     $email = $user->getEmail();
-    if (!is_string($name) || $name === '') {
-      // Something is wrong with the name.
-      // This must be some edge case, which can be ignored.
-      return;
-    }
     // Check if the user exists in Nextcloud.
-    $nextcloud_user = $this->userEndpoint->load($name);
+    $nextcloud_user = $this->userEndpoint->load($nextcloud_user_id);
     switch ($op) {
       case 'update':
       case 'insert':
         if (!$this->shouldHaveNextcloudAccount($user)) {
           if ($nextcloud_user !== NULL) {
-            $this->userEndpoint->delete($name);
+            $this->userEndpoint->delete($nextcloud_user_id);
           }
         }
-        elseif ($name && $email) {
+        elseif ($nextcloud_user_id && $email) {
           if ($nextcloud_user === NULL) {
-            $this->createNextcloudAccountFor($user);
+            $this->createNextcloudAccountFor($user, $nextcloud_user_id);
           }
           else {
             $this->updateNextcloudAccount($user, $nextcloud_user);
@@ -82,7 +81,7 @@ class NextcloudUsers implements EntityObserverInterface {
 
       case 'delete':
         if ($nextcloud_user !== NULL) {
-          $this->userEndpoint->delete($name);
+          $this->userEndpoint->delete($nextcloud_user_id);
         }
         break;
     }
@@ -126,34 +125,35 @@ class NextcloudUsers implements EntityObserverInterface {
    *
    * @param \Drupal\user\UserInterface $user
    *   Drupal user.
+   * @param string $nextcloud_user_id
+   *   Nextcloud user id.
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
-  private function createNextcloudAccountFor(UserInterface $user): void {
-    $name = $user->getAccountName();
+  private function createNextcloudAccountFor(UserInterface $user, string $nextcloud_user_id): void {
     $email = $user->getEmail();
     if (!$email) {
       $this->logger->warning("User @uid / @name does not have an email address, so no Nextcloud account can be created.", [
         '@uid' => $user->id(),
-        '@name' => $name,
+        '@name' => $user->getAccountName(),
       ]);
       // Give up.
       return;
     }
     $this->userEndpoint->insertWithEmail(
-      $name,
+      $nextcloud_user_id,
       $user->getEmail(),
       $user->getDisplayName(),
     );
-    $this->logger->info("A nextcloud account named '@name' was created for user @uid", [
-      '@name' => $name,
+    $this->logger->info("A Nextcloud account named '@name' was created for user @uid", [
+      '@name' => $nextcloud_user_id,
       '@uid' => $user->id(),
     ]);
-    $nextcloud_user = $this->userEndpoint->load($name);
+    $nextcloud_user = $this->userEndpoint->load($nextcloud_user_id);
     if ($nextcloud_user === NULL) {
       throw new NextcloudApiException(sprintf(
         "Nextcloud account %s for user %d / %s was just created, but now it cannot be loaded.",
-        $name,
+        $nextcloud_user_id,
         $user->id(),
         $user->getAccountName(),
       ));

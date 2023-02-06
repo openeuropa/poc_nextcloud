@@ -69,6 +69,10 @@ class GroupRoleToGroupId {
       // This role should not have a group in Nextcloud.
       return NULL;
     }
+    $drupal_group_id = $drupal_group->id();
+    if ($drupal_group_id === NULL) {
+      throw new \RuntimeException('Group id builder was called with a group that has no id yet.');
+    }
     return sprintf(
       'DRUPAL-GROUP-%s-%s',
       $drupal_group->id(),

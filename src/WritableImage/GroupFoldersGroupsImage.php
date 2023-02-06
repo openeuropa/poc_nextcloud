@@ -181,10 +181,10 @@ class GroupFoldersGroupsImage {
    */
   private function writeGroupFolderAclGroups(NxGroupFolder $group_folder, array $group_ids): void {
     $group_folder_id = $group_folder->getId();
-    $acl_managers_ids_by_type = $group_folder->getAclManagerIdsByType();
+    $current_group_ids = $group_folder->getAclManagerGroupIds();
     $current_group_ids = preg_grep(
       $this->groupIdRegex,
-      $acl_managers_ids_by_type['group'] ?? [],
+      $current_group_ids,
     );
     $group_ids_to_remove = array_diff($current_group_ids, $group_ids);
     $group_ids_to_add = array_diff($group_ids, $current_group_ids);
@@ -194,15 +194,11 @@ class GroupFoldersGroupsImage {
     foreach ($group_ids_to_add as $group_id) {
       $this->groupFolderEndpoint->setManageAclGroup($group_folder_id, $group_id, TRUE);
     }
-    $count_before = array_sum(array_map(
-      'count',
-      $group_folder->getAclManagerIdsByType(),
-    ));
-    // Set the ACL checkbox.
-    $this->groupFolderEndpoint->setAcl(
-      $group_folder_id,
-      $count_before > count($group_ids_to_remove),
-    );
+    // Enable or disable ACL, depending on whether any managers are left.
+    $enable_acl = $group_ids
+      || $group_folder->getAclManagerUserIds()
+      || array_diff($group_folder->getAclManagerGroupIds(), $group_ids_to_remove);
+    $this->groupFolderEndpoint->setAcl($group_folder_id, $enable_acl);
   }
 
 }

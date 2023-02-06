@@ -22,7 +22,9 @@ services:
       - '@service_container'
       - '@logger.channel.poc_nextcloud'
       -
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderGroupPerms
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolders
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupMemberships
+        # Groups must be created before memberships.
         - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroups
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupMemberships
+        # Groups and group folders must be created before adding groups to group folders.
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolders
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderGroupPerms

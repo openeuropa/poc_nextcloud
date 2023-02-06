@@ -14,8 +14,8 @@ services:
     arguments:
       - '@http_client'
       - '@config.factory'
-      - '@logger.channel.poc_nextcloud'
       - '@poc_nextcloud.connection_cookie_store'
+  Drupal\poc_nextcloud\Service\NextcloudUserMap: {}
   Drupal\poc_nextcloud\Service\NextcloudUrlBuilder:
     factory: [~, create]
     arguments: ['@config.factory']

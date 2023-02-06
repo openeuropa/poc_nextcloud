@@ -119,7 +119,7 @@ class NxGroupFolder {
   }
 
   /**
-   * Gets groups and users that can manage access per file.
+   * Gets ids and labels of groups and users that can manage access per file.
    *
    * @return string[][]
    *   Group and users with permission to manage access on individual files.
@@ -127,8 +127,23 @@ class NxGroupFolder {
    *   the display name.
    *   Example: $['group'][$group_id] = $group_display_name.
    */
-  public function getAclManagerIdsByType(): array {
+  public function getAclManagerNamesByTypeAndId(): array {
     return $this->manageAcl;
+  }
+
+  /**
+   * Gets ids of groups and users that can manage access per file.
+   *
+   * This format is more useful for most appliations.
+   *
+   * @return string[][]
+   *   Ids of group and users.
+   *   First key is the type ('group' or 'user'), second key is sequential,
+   *   value is the id.
+   *   Example: $['group'][] = $group_id.
+   */
+  public function getAclManagerIdsByType(): array {
+    return array_map('array_keys', $this->manageAcl);
   }
 
   /**

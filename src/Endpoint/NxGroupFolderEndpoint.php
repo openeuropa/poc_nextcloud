@@ -326,13 +326,21 @@ class NxGroupFolderEndpoint {
    */
   private function createGroupFolderFromData(array $data): NxGroupFolder {
     if (!isset($data['id'])) {
-      throw new UnexpectedResponseDataException('Missing group folder id in response data.');
+      throw new UnexpectedResponseDataException(sprintf(
+        'Missing group folder id in response data. Existing keys: %s.',
+        implode(array_keys($data)),
+      ));
     }
     if (!isset($data['mount_point'])) {
       throw new UnexpectedResponseDataException('Missing group folder mount point in response data.');
     }
     $manage_acl = [];
     foreach ($data['manage'] as $record) {
+      if (!$record) {
+        // The Nextcloud database includes orphan records.
+        // See https://github.com/nextcloud/groupfolders/issues/2261.
+        continue;
+      }
       $manage_acl[$record['type']][$record['id']] = $record['displayname'];
     }
     try {

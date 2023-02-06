@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\group\Entity\GroupContentInterface;
 use Drupal\group\Entity\GroupInterface;
 use Drupal\group\Entity\GroupRoleInterface;
+use Drupal\group\Entity\GroupTypeInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -98,6 +99,27 @@ function poc_nextcloud_group_folder_group_role_update(GroupRoleInterface $group_
  */
 function poc_nextcloud_group_folder_group_role_delete(GroupRoleInterface $group_role): void {
   _poc_nextcloud_group_folder_entity_hook($group_role, 'delete');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function poc_nextcloud_group_folder_group_type_insert(GroupTypeInterface $group_type): void {
+  _poc_nextcloud_group_folder_entity_hook($group_type, 'insert');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function poc_nextcloud_group_folder_group_type_update(GroupTypeInterface $group_type): void {
+  _poc_nextcloud_group_folder_entity_hook($group_type, 'update');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function poc_nextcloud_group_folder_group_type_delete(GroupTypeInterface $group_type): void {
+  _poc_nextcloud_group_folder_entity_hook($group_type, 'delete');
 }
 
 /**

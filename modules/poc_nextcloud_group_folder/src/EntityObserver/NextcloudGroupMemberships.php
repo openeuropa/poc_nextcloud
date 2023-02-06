@@ -14,6 +14,7 @@ use Drupal\group\GroupMembershipLoaderInterface;
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\EntityObserver\EntityObserverInterface;
+use Drupal\poc_nextcloud\Service\NextcloudUserMap;
 use Drupal\poc_nextcloud\WritableImage\GroupsUsersImage;
 use Drupal\poc_nextcloud\WritableImage\UserGroupsImage;
 use Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader;
@@ -30,6 +31,8 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
    *
    * @param \Drupal\group\GroupMembershipLoaderInterface $groupMembershipLoader
    *   Group membership loader.
+   * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
+   *   Service to get Nextcloud user for Drupal user.
    * @param \Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint $groupEndpoint
    *   Group endpoint.
    * @param \Drupal\poc_nextcloud\Endpoint\NxUserEndpoint $userEndpoint
@@ -41,6 +44,7 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
    */
   public function __construct(
     private GroupMembershipLoaderInterface $groupMembershipLoader,
+    private NextcloudUserMap $nextcloudUserMap,
     private NxGroupEndpoint $groupEndpoint,
     private NxUserEndpoint $userEndpoint,
     private GroupRoleToGroupId $groupRoleToGroupId,
@@ -176,9 +180,7 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
     UserInterface $drupal_user,
     ?GroupMembership $drupal_membership,
   ): void {
-    // @todo More sophisticated mapping.
-    $nextcloud_user_id = $drupal_user->id();
-    $nextcloud_user = $this->userEndpoint->load($nextcloud_user_id);
+    $nextcloud_user = $this->nextcloudUserMap->getNextcloudUser($drupal_user);
     if ($nextcloud_user === NULL) {
       return;
     }
@@ -186,29 +188,27 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
     $drupal_group_type = $drupal_group?->getGroupType();
     $image = new UserGroupsImage(
       $this->userEndpoint,
-      $nextcloud_user_id,
+      $nextcloud_user->getId(),
       $this->groupRoleToGroupId->getGroupNamespaceRegex(
         $drupal_group,
         $drupal_group_type,
       ),
     );
     // @todo More sophisticated mapping.
-    if ($nextcloud_user_id !== NULL) {
-      if ($drupal_membership !== NULL) {
+    if ($drupal_membership !== NULL) {
+      $this->processMembership(
+        [$image, 'addGroup'],
+        $drupal_membership,
+        NULL,
+      );
+    }
+    else {
+      foreach ($this->groupMembershipLoader->loadByUser($drupal_user) as $a_drupal_membership) {
         $this->processMembership(
           [$image, 'addGroup'],
-          $drupal_membership,
+          $a_drupal_membership,
           NULL,
         );
-      }
-      else {
-        foreach ($this->groupMembershipLoader->loadByUser($drupal_user) as $a_drupal_membership) {
-          $this->processMembership(
-            [$image, 'addGroup'],
-            $a_drupal_membership,
-            NULL,
-          );
-        }
       }
     }
     $image->write();
@@ -223,6 +223,8 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
    *   Drupal group type.
    * @param \Drupal\group\Entity\GroupRoleInterface|null $drupal_group_role
    *   Drupal group role, or NULL for all roles of the type.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
   private function processGroupType(
     GroupsUsersImage $image,
@@ -248,6 +250,8 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
    *   Drupal group role, or NULL for all roles in the group.
    * @param \Drupal\group\Entity\GroupInterface $drupal_group
    *   Drupal group.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
   private function processGroup(
     GroupsUsersImage $image,
@@ -255,12 +259,13 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
     GroupInterface $drupal_group,
   ): void {
     foreach ($drupal_group->getMembers() as $drupal_membership) {
-      // @todo More sophisticated nextcloud user id lookup.
-      // @todo Check if user exists in Nextcloud?
-      $nextcloud_user_id = $drupal_membership->getUser()->getAccountName();
+      $nextcloud_user = $this->nextcloudUserMap->getNextcloudUser($drupal_membership->getUser());
+      if (!$nextcloud_user) {
+        // If the user does not exist, no memberships can be updated.
+      }
       $this->processMembership(
         fn ($group_id) => $image->addUserGroup(
-          $nextcloud_user_id,
+          $nextcloud_user->getId(),
           $group_id,
         ),
         $drupal_membership,

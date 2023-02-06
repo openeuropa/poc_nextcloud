@@ -9,8 +9,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\extra_field\Plugin\ExtraFieldDisplayFormattedBase;
-use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
+use Drupal\poc_nextcloud\Service\NextcloudUserMap;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -39,8 +39,8 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
    *   Plugin id.
    * @param array $plugin_definition
    *   Plugin definition.
-   * @param \Drupal\poc_nextcloud\Endpoint\NxUserEndpoint $userEndpoint
-   *   User endpoint.
+   * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
+   *   Service to get Nextcloud user for Drupal user.
    * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudLinkBuilder
    *   Service to build links to Nextcloud.
    */
@@ -48,7 +48,7 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
     array $configuration,
     string $plugin_id,
     array $plugin_definition,
-    private NxUserEndpoint $userEndpoint,
+    private NextcloudUserMap $nextcloudUserMap,
     private NextcloudUrlBuilder $nextcloudLinkBuilder,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -62,7 +62,7 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get(NxUserEndpoint::class),
+      $container->get(NextcloudUserMap::class),
       $container->get(NextcloudUrlBuilder::class),
     );
   }
@@ -83,18 +83,21 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   *
+   * @todo Catch exceptions here.
    */
   public function viewElements(ContentEntityInterface $entity): array {
     // @todo Check permission of current user.
     if (!$entity instanceof UserInterface) {
       return [];
     }
-    $name = $entity->getAccountName();
-    $nextcloud_user = $this->userEndpoint->load($name);
+    $nextcloud_user = $this->nextcloudUserMap->getNextcloudUser($entity);
     if ($nextcloud_user === NULL) {
       return [];
     }
-    $url = $this->nextcloudLinkBuilder->url('u/' . urlencode($name));
+    $url = $this->nextcloudLinkBuilder->url('u/' . urlencode($nextcloud_user->getId()));
     return [
       '#cache' => ['max-age' => 0],
       '#type' => 'link',
