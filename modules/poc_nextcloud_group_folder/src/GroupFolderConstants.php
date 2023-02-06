@@ -12,11 +12,11 @@ use Drupal\poc_nextcloud\NextcloudConstants;
 class GroupFolderConstants {
 
   public const PERMISSIONS_MAP = [
-    'nextcloud group folder read' => NextcloudConstants::PERMISSION_READ,
-    'nextcloud group folder write' => NextcloudConstants::PERMISSION_WRITE,
-    'nextcloud group folder share' => NextcloudConstants::PERMISSION_SHARE,
-    'nextcloud group folder delete' => NextcloudConstants::PERMISSION_DELETE,
-    'nextcloud group folder manage' => NextcloudConstants::PERMISSION_ADVANCED,
+    NextcloudConstants::PERMISSION_READ => 'nextcloud group folder read',
+    NextcloudConstants::PERMISSION_WRITE => 'nextcloud group folder write',
+    NextcloudConstants::PERMISSION_SHARE => 'nextcloud group folder share',
+    NextcloudConstants::PERMISSION_DELETE => 'nextcloud group folder delete',
+    NextcloudConstants::PERMISSION_ADVANCED => 'nextcloud group folder manage',
   ];
 
   public const PERMISSIONS_SHORTCODE_MAP = [

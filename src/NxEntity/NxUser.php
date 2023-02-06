@@ -6,6 +6,8 @@ namespace Drupal\poc_nextcloud\NxEntity;
 
 /**
  * Value object for a Nextcloud user loaded from the API.
+ *
+ * Currently this is an incomplete subset of what the API returns.
  */
 class NxUser {
 

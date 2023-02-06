@@ -7,6 +7,6 @@ namespace Drupal\poc_nextcloud\Exception;
 /**
  * The data provided does not meet the expectations.
  */
-class MalformedDataException extends NextcloudApiException {
+class UnexpectedResponseDataException extends NextcloudApiException {
 
 }

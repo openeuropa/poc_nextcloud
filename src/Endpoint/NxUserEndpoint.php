@@ -30,7 +30,7 @@ class NxUserEndpoint {
    *   API connection.
    */
   public function __construct(ApiConnectionInterface $connection) {
-    $this->connection = $connection->path('ocs/v1.php/cloud/users');
+    $this->connection = $connection->withPath('ocs/v1.php/cloud/users');
   }
 
   /**
@@ -57,10 +57,12 @@ class NxUserEndpoint {
   /**
    * Creates a new user with email.
    *
-   * @param string $user_id
+   * @param string $userid
    *   User id.
    * @param string $email
    *   Email address.
+   * @param string|null $displayName
+   *   Display name, or NULL to leave it empty.
    *
    * @return string
    *   New user id.
@@ -68,11 +70,16 @@ class NxUserEndpoint {
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
-  public function insertWithEmail(string $user_id, string $email): string {
-    return $this->insertValues([
-      'userid' => $user_id,
-      'email' => $email,
-    ]);
+  public function insertWithEmail(
+    string $userid,
+    string $email,
+    string $displayName = NULL,
+  ): string {
+    return $this->insertValues(compact(
+      'userid',
+      'email',
+      'displayName',
+    ));
   }
 
   /**
@@ -86,12 +93,18 @@ class NxUserEndpoint {
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   Failed to create the new entity.
+   *
+   * @internal
    */
-  protected function insertValues(array $values): string {
+  public function insertValues(array $values): string {
     if (empty($values['userid'])) {
       throw new NextcloudApiException('User id is required when creating a new user.');
     }
-    $new_id = $this->connection->requestOcs('POST', '', $values)
+    $new_id = $this->connection->requestOcs(
+      'POST',
+      '',
+      array_diff($values, [NULL]),
+    )
       ->throwIfFailure()
       ->getData()['id'];
     if ($new_id !== $values['userid']) {
@@ -200,6 +213,20 @@ class NxUserEndpoint {
    */
   public function setUserEmail(string $user_id, ?string $email): void {
     $this->setUserField($user_id, 'email', $email);
+  }
+
+  /**
+   * Sets the user display name.
+   *
+   * @param string $user_id
+   *   User id.
+   * @param string|null $display_name
+   *   Display name, or NULL to unset.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   */
+  public function setUserDisplayName(string $user_id, ?string $display_name): void {
+    $this->setUserField($user_id, 'displayname', $display_name);
   }
 
   /**
@@ -361,7 +388,7 @@ class NxUserEndpoint {
   private function userGroupsPath(string $user_id, string $group_id = NULL): ApiConnectionInterface {
     $ret = $this->userPath($user_id, '/groups');
     if ($group_id !== NULL) {
-      $ret = $ret->query(['groupid' => $group_id]);
+      $ret = $ret->withFormValues(['groupid' => $group_id]);
     }
     return $ret;
   }
@@ -382,7 +409,7 @@ class NxUserEndpoint {
   private function userSubadminsPath(string $user_id, string $group_id = NULL): ApiConnectionInterface {
     $ret = $this->userPath($user_id, '/subadmins');
     if ($group_id !== NULL) {
-      $ret = $ret->query(['groupid' => $group_id]);
+      $ret = $ret->withFormValues(['groupid' => $group_id]);
     }
     return $ret;
   }
@@ -400,7 +427,7 @@ class NxUserEndpoint {
    */
   private function userPath(string $user_id, string $path = ''): ApiConnectionInterface {
     // @todo Is urlencode() sufficient and necessary?
-    return $this->connection->path(urlencode($user_id) . $path);
+    return $this->connection->withPath(urlencode($user_id) . $path);
   }
 
 }

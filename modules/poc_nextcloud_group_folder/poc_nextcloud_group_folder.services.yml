@@ -3,25 +3,26 @@ services:
     autowire: true
   # Services that depend on the nextcloud connection will cause exception if
   # Nextcloud is not configured.
-  Drupal\poc_nextcloud_group_folder\Service\GroupFolderFieldHelper: {}
-  Drupal\poc_nextcloud_group_folder\Service\GroupFolderMemberHelper:
+  Drupal\poc_nextcloud_group_folder\Service\GroupToGroupFolderMap: {}
+  Drupal\poc_nextcloud_group_folder\Service\GroupRoleToGroupId: {}
+  Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader:
+    arguments: ['@entity_type.manager']
+  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderGroupPerms: {}
+  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolders: {}
+  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupMemberships:
     arguments:
       # Explicitly set arguments that cannot be autowired.
       # See https://www.drupal.org/project/drupal/issues/3336739
       Drupal\group\GroupMembershipLoaderInterface: '@group.membership_loader'
-  Drupal\poc_nextcloud_group_folder\EntityHook\UserSync:
-    arguments:
-      Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
-  Drupal\poc_nextcloud_group_folder\EntityHook\GroupSync:
-    arguments:
-      Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
-  Drupal\poc_nextcloud_group_folder\EntityHook\GroupContentSync: {}
-  poc_nextcloud_group_folder.entity_hook_dispatcher:
-    class: Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher
+  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroups: {}
+  poc_nextcloud_group_folder.entity_observer:
+    class: Drupal\poc_nextcloud\EntityObserver\Multicast
     factory: [~, fromServiceIdsWithEmptyFallback]
     arguments:
       - '@service_container'
+      - '@logger.channel.poc_nextcloud'
       -
-        user: Drupal\poc_nextcloud_group_folder\EntityHook\UserSync
-        group: Drupal\poc_nextcloud_group_folder\EntityHook\GroupSync
-        group_content: Drupal\poc_nextcloud_group_folder\EntityHook\GroupContentSync
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderGroupPerms
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolders
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupMemberships
+        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroups

@@ -1,8 +1,0 @@
-name: POC Nextcloud Group Workspace
-type: module
-description: Creates Nextcloud workspaces for Drupal groups
-package: OpenEuropa
-core_version_requirement: ^9.5
-
-dependencies:
-  - poc_nextcloud:poc_nextcloud

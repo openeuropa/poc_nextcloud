@@ -7,9 +7,9 @@ namespace Drupal\poc_nextcloud_group_folder\Service;
 use Drupal\group\Entity\GroupInterface;
 
 /**
- * Helper class to interact with the group folder field.
+ * Service to map Drupal groups to Nextcloud group folders.
  */
-class GroupFolderFieldHelper {
+class GroupToGroupFolderMap {
 
   /**
    * Determines if the group should and can have a workspace.

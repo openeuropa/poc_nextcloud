@@ -11,6 +11,17 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\user\UserInterface;
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function poc_nextcloud_module_implements_alter(&$implementations): void {
+  $group = $implementations['poc_nextcloud'] ?? NULL;
+  if ($group !== NULL) {
+    // Implementations from the core module must run before those of submodules.
+    $implementations = ['poc_nextcloud' => $group] + $implementations;
+  }
+}
+
+/**
  * Implements hook_ENTITY_TYPE_insert().
  */
 function poc_nextcloud_user_insert(UserInterface $user): void {
@@ -40,7 +51,7 @@ function poc_nextcloud_user_delete(UserInterface $user): void {
  *   Verb from the hook name, e.g. 'presave', 'insert', 'update', 'delete'.
  */
 function _poc_nextcloud_entity_hook(EntityInterface $entity, string $op): void {
-  /** @var \Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher $service */
-  $service = \Drupal::service('poc_nextcloud.entity_hook_dispatcher');
-  $service($entity, $op);
+  /** @var \Drupal\poc_nextcloud\EntityObserver\EntityObserverInterface $service */
+  $service = \Drupal::service('poc_nextcloud.entity_observer');
+  $service->entityOp($entity, $op);
 }

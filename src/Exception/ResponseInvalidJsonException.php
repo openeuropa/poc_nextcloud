@@ -7,8 +7,9 @@ namespace Drupal\poc_nextcloud\Exception;
 /**
  * A response to a Nextcloud API request returned invalid json.
  *
- * Probably it is just HTMl instead of json.
+ * Typically this would happen if the API returns a http error response with
+ * html.
  */
-class ResponseInvalidJsonException extends NextcloudApiException {
+class ResponseInvalidJsonException extends UnexpectedResponseDataException {
 
 }

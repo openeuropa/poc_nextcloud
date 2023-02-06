@@ -9,10 +9,14 @@ use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\Exception\ResponseInvalidJsonException;
 use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Response\OcsResponse;
+use Drupal\poc_nextcloud\ValueStore\ValueStoreInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Cookie\CookieJarInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Default implementation.
@@ -33,11 +37,14 @@ class ApiConnection implements ApiConnectionInterface {
    *
    * @param \GuzzleHttp\ClientInterface $client
    *   Http client.
+   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
+   *   Storage for cookies.
    * @param string $baseUrl
    *   Url of Nextcloud instance.
    */
   public function __construct(
     private ClientInterface $client,
+    private ValueStoreInterface $cookieStore,
     private string $baseUrl,
   ) {}
 
@@ -50,16 +57,21 @@ class ApiConnection implements ApiConnectionInterface {
    *   Http client.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Drupal configuration factory.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   Logger.
+   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
+   *   Value store for cookie data.
    *
    * @return self
    *   New connection.
    *
-   * @throws \Exception
-   *   Configuration is incomplete or invalid.
+   * @throws \Drupal\poc_nextcloud\Exception\ServiceNotAvailableException
    */
   public static function fromConfig(
     ClientInterface $client,
     ConfigFactoryInterface $config_factory,
+    LoggerInterface $logger,
+    ValueStoreInterface $cookieStore,
   ): self {
     $settings = $config_factory->get('poc_nextcloud.settings');
     $values = [];
@@ -75,7 +87,13 @@ class ApiConnection implements ApiConnectionInterface {
     }
     [$url, $username, $pass] = array_values($values);
     $url = rtrim($url, '/') . '/';
-    return self::fromValues($client, $url, $username, $pass);
+    return self::fromValues(
+      $client,
+      $logger,
+      $cookieStore,
+      $url,
+      $username,
+      $pass);
   }
 
   /**
@@ -83,6 +101,10 @@ class ApiConnection implements ApiConnectionInterface {
    *
    * @param \GuzzleHttp\ClientInterface $client
    *   Http client.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   Logger.
+   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
+   *   Storage for cookie data.
    * @param string $url
    *   Url of the Nextcloud instance, with trailing slash.
    * @param string $username
@@ -93,19 +115,26 @@ class ApiConnection implements ApiConnectionInterface {
    * @return self
    *   New connection.
    *
-   * @throws \Exception
-   *   Values were invalid.
+   * @throws \Drupal\poc_nextcloud\Exception\ServiceNotAvailableException
    */
-  public static function fromValues(ClientInterface $client, string $url, string $username, string $pass): self {
+  public static function fromValues(
+    ClientInterface $client,
+    LoggerInterface $logger,
+    ValueStoreInterface $cookieStore,
+    string $url,
+    string $username,
+    string $pass,
+  ): self {
     if ($url === '' || $username === '' || $pass === '') {
       throw new ServiceNotAvailableException('Nextcloud configuration is incomplete.');
     }
     if (!preg_match('@^(?:http|https)://\w+(?:\.\w+)*/(?:\w+/)*$@', $url)) {
       throw new ServiceNotAvailableException('Nextcloud url does not have the expected format.');
     }
-    return (new ApiConnection($client, $url))
+    return (new self($client, $logger, $cookieStore, $url))
       ->withAuth($username, $pass)
       ->withHeader('OCS-APIRequest', 'true')
+      // @todo Do all API requests need the same headers?
       ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
       // Always send json header.
       ->withHeader('accept', 'application/json');
@@ -114,7 +143,7 @@ class ApiConnection implements ApiConnectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function path(string $prefix): static {
+  public function withPath(string $prefix): static {
     if ($prefix === '') {
       return $this;
     }
@@ -128,27 +157,43 @@ class ApiConnection implements ApiConnectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function query(array $query): static {
-    if ($query === ($this->options[RequestOptions::FORM_PARAMS] ?? [])) {
+  public function withFormValues(array $values): static {
+    if ($values === ($this->options[RequestOptions::FORM_PARAMS] ?? [])) {
       return $this;
     }
     $clone = clone $this;
-    $clone->options[RequestOptions::FORM_PARAMS] = $query;
+    $clone->options[RequestOptions::FORM_PARAMS] = $values;
+    return $clone;
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function withQuery(array $query): static {
+    if ($query === ($this->options[RequestOptions::QUERY] ?? [])) {
+      return $this;
+    }
+    $clone = clone $this;
+    $clone->options[RequestOptions::QUERY] = $query;
     return $clone;
   }
 
   /**
    * Immutable setter. Sets credentials for the API user.
    *
+   * This is meant to be called in the same code that constructs the instance,
+   * therefore it is not part of the interface.
+   *
    * @param string $user
    *   Username for Nextcloud API user.
    * @param string $pass
    *   Password for Nextcloud API user.
    *
-   * @return \Drupal\poc_nextcloud\Connection\ApiConnection
+   * @return static
    *   Copied instance with updated credentials.
    */
-  public function withAuth(string $user, string $pass) {
+  public function withAuth(string $user, string $pass): static {
     $clone = clone $this;
     $clone->options[RequestOptions::AUTH] = [$user, $pass];
     return $clone;
@@ -158,6 +203,9 @@ class ApiConnection implements ApiConnectionInterface {
    * Immutable setter. Adds a http header.
    *
    * If a header with the given name already exists, it will be overwritten.
+   *
+   * This is meant to be called in the same code that constructs the instance,
+   * therefore it is not part of the interface.
    *
    * @param string $name
    *   Header name.
@@ -184,8 +232,8 @@ class ApiConnection implements ApiConnectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function requestJson(string $method, string $path = '', array $query = []): array {
-    $body = $this->requestBody($method, $path, $query);
+  public function requestJson(string $method, string $path = '', array $params = []): array {
+    $body = $this->requestBody($method, $path, $params);
     try {
       $data = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
     }
@@ -194,7 +242,7 @@ class ApiConnection implements ApiConnectionInterface {
         "Invalid json returned for %s request to %s with parameters %s.",
         $method,
         $path,
-        \GuzzleHttp\json_encode($query),
+        \GuzzleHttp\json_encode($params),
       ), 0, $e);
     }
     return $data;
@@ -209,19 +257,21 @@ class ApiConnection implements ApiConnectionInterface {
    *   Method, e.g. 'POST'.
    * @param string $path
    *   Path.
-   * @param array $query
-   *   Query parameters.
+   * @param array $params
+   *   Query string parameters for GET, or form values for POST.
    *
    * @return string
    *   Response body.
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *
-   * @todo Consider to keep the GuzzleException.
+   * @todo Consider to not wrap the GuzzleException.
+   *   This would make the throws contract more verbose, but it would allow more
+   *   targeted catch statements later.
    */
-  protected function requestBody(string $method, string $path = '', array $query = []): string {
+  protected function requestBody(string $method, string $path = '', array $params = []): string {
     try {
-      $response = $this->request($method, $path, $query);
+      $response = $this->request($method, $path, $params);
     }
     catch (GuzzleException $e) {
       throw new NextcloudApiException(sprintf(
@@ -230,7 +280,7 @@ class ApiConnection implements ApiConnectionInterface {
         $this->baseUrl . $path,
         // Show parameter names, but not values.
         json_encode(
-          array_map(fn () => '*', $query),
+          array_map(static fn () => '*', $params),
         ),
         $e->getMessage(),
       ), 0, $e);
@@ -241,13 +291,48 @@ class ApiConnection implements ApiConnectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function request(string $method, string $path = '', array $query = []): ResponseInterface {
+  public function request(string $method, string $path = '', array $params = []): ResponseInterface {
     $url = $this->baseUrl . $path;
     $options = $this->options;
-    if ($query) {
-      $options[RequestOptions::FORM_PARAMS] = $query;
+    if ($params) {
+      if ($method === 'GET') {
+        $options[RequestOptions::QUERY] = $params;
+      }
+      else {
+        $options[RequestOptions::FORM_PARAMS] = $params;
+      }
     }
-    return $this->client->request($method, $url, $options);
+    $cookies_data_before = $this->cookieStore->get();
+    $options['cookies'] = $jar = new CookieJar(TRUE, $cookies_data_before);
+    $response = $this->client->request($method, $url, $options);
+    $cookies_data_after = $this->exportCookiesInJar($jar);
+    if ($cookies_data_after !== $cookies_data_before) {
+      $this->cookieStore->set($cookies_data_after);
+    }
+    return $response;
+  }
+
+  /**
+   * Converts cookies as array.
+   *
+   * This is different from CookieJar->toArray(), in that it only exports
+   * cookies that are meant to be persisted.
+   *
+   * @param \GuzzleHttp\Cookie\CookieJarInterface $jar
+   *   Cookie jar.
+   *
+   * @return array
+   *   Data from the cookies.
+   */
+  private function exportCookiesInJar(CookieJarInterface $jar): array {
+    $data = [];
+    /** @var \GuzzleHttp\Cookie\SetCookie $cookie */
+    foreach ($jar->getIterator() as $cookie) {
+      if (CookieJar::shouldPersist($cookie, TRUE)) {
+        $data[] = $cookie->toArray();
+      }
+    }
+    return $data;
   }
 
 }

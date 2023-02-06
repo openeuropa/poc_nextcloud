@@ -4,11 +4,14 @@ declare(strict_types = 1);
 
 namespace Drupal\poc_nextcloud\Response;
 
+use Drupal\poc_nextcloud\DataUtil;
 use Drupal\poc_nextcloud\Exception\FailureResponseException;
-use Drupal\poc_nextcloud\Exception\MalformedDataException;
+use Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException;
 
 /**
  * Value object for a response from the Nextcloud API.
+ *
+ * Most of the Nextcloud APIs return responses with this structure.
  */
 class OcsResponse {
 
@@ -45,34 +48,6 @@ class OcsResponse {
   ) {}
 
   /**
-   * Converts stringified integers to true integers.
-   *
-   * Also converts '' to NULL.
-   *
-   * @param mixed $value
-   *   A value which could be a stringified integer, e.g. "6".
-   *
-   * @return mixed
-   *   The converted value, e.g. 6 for "6".
-   *   If the value was not a stringified integer, the original value is
-   *   returned.
-   */
-  private static function convertIntLikeString(mixed $value): mixed {
-    if (is_string($value)) {
-      if ($value === '') {
-        return NULL;
-      }
-      if ((string) (int) $value === $value) {
-        return (int) $value;
-      }
-    }
-    // Return the original value.
-    // It is better if calling code does the validation, to have better context
-    // for failure messages.
-    return $value;
-  }
-
-  /**
    * Creates a new instance from response data.
    *
    * @param array $data
@@ -81,22 +56,22 @@ class OcsResponse {
    * @return self
    *   New instance.
    *
-   * @throws \Drupal\poc_nextcloud\Exception\MalformedDataException
+   * @throws \Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException
    */
   public static function fromResponseData(array $data): self {
     try {
       $meta = $data['ocs']['meta'];
       return new self(
         $meta['status'],
-        self::convertIntLikeString($meta['statuscode']),
+        DataUtil::toIntIfPossible($meta['statuscode']),
         $meta['message'],
-        self::convertIntLikeString($meta['totalitems'] ?? NULL),
-        self::convertIntLikeString($meta['itemsperpage'] ?? NULL),
+        DataUtil::toIntIfPossible($meta['totalitems'] ?? NULL),
+        DataUtil::toIntIfPossible($meta['itemsperpage'] ?? NULL),
         $data['ocs']['data'],
       );
     }
     catch (\Throwable $e) {
-      throw new MalformedDataException(sprintf(
+      throw new UnexpectedResponseDataException(sprintf(
         'Unexpected response data. Message: %s.',
         $e->getMessage(),
       ), 0, $e);
@@ -116,10 +91,14 @@ class OcsResponse {
   /**
    * Throws an exception if this is a failure response.
    *
+   * This allows for uninterrupted method chaining.
+   *
    * @return $this
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   This is a failure response.
+   *   The exception contains the parts of information from the response object
+   *   that are relevant in case of failure.
    */
   public function throwIfFailure(): static {
     if ($this->isFailure()) {
@@ -130,6 +109,8 @@ class OcsResponse {
 
   /**
    * Returns null if data has a specific value.
+   *
+   * This allows for uninterrupted method chaining with `?->`.
    *
    * @param mixed $data
    *   Value for which to return NULL.
@@ -144,6 +125,8 @@ class OcsResponse {
   /**
    * Returns null for a given status code.
    *
+   * This allows for uninterrupted method chaining with `?->`.
+   *
    * @param int $statucode
    *   Status code.
    *
@@ -152,19 +135,6 @@ class OcsResponse {
    */
   public function nullIfStatusCode(int $statucode): ?static {
     return $this->statuscode === $statucode ? NULL : $this;
-  }
-
-  /**
-   * Gets a failure response if this is a failure.
-   *
-   * @return \Drupal\poc_nextcloud\Response\FailureResponse|null
-   *   Failure response, or NULL on success.
-   */
-  public function getFailureResponse(): ?FailureResponse {
-    if ($this->isFailure()) {
-      return new FailureResponse($this->statuscode, $this->message);
-    }
-    return NULL;
   }
 
   /**

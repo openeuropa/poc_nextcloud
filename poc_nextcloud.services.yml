@@ -4,11 +4,18 @@ services:
   logger.channel.poc_nextcloud:
     parent: logger.channel_base
     arguments: ['poc_nextcloud']
+  poc_nextcloud.connection_cookie_store:
+    class: Drupal\poc_nextcloud\ValueStore\StateValueStore
+    arguments: ['@state', 'poc_nextcloud.connection_cookies']
   # Services that depend on the nextcloud connection will cause exception if
   # Nextcloud is not configured.
   Drupal\poc_nextcloud\Connection\ApiConnectionInterface:
     factory: [Drupal\poc_nextcloud\Connection\ApiConnection, 'fromConfig']
-    arguments: ['@http_client', '@config.factory']
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.channel.poc_nextcloud'
+      - '@poc_nextcloud.connection_cookie_store'
   Drupal\poc_nextcloud\Service\NextcloudUrlBuilder:
     factory: [~, create]
     arguments: ['@config.factory']
@@ -16,18 +23,16 @@ services:
   Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxWorkspaceEndpoint: {}
-  Drupal\poc_nextcloud\Service\NextcloudGroupHelper: {}
-  Drupal\poc_nextcloud\Service\GroupFolderHelper: {}
-  Drupal\poc_nextcloud\Service\GroupHelper: {}
-  Drupal\poc_nextcloud\EntityHook\UserSync:
+  Drupal\poc_nextcloud\EntityObserver\NextcloudUsers:
     arguments:
       # Explicitly set arguments that cannot be autowired.
       # See https://www.drupal.org/project/drupal/issues/3336739
       Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
-  poc_nextcloud.entity_hook_dispatcher:
-    class: Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher
+  poc_nextcloud.entity_observer:
+    class: Drupal\poc_nextcloud\EntityObserver\Multicast
     factory: [~, fromServiceIdsWithEmptyFallback]
     arguments:
       - '@service_container'
+      - '@logger.channel.poc_nextcloud'
       -
-        user: Drupal\poc_nextcloud\EntityHook\UserSync
+        - Drupal\poc_nextcloud\EntityObserver\NextcloudUsers

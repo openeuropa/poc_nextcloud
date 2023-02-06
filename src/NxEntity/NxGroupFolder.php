@@ -127,7 +127,7 @@ class NxGroupFolder {
    *   the display name.
    *   Example: $['group'][$group_id] = $group_display_name.
    */
-  public function getManageAcl(): array {
+  public function getAclManagerIdsByType(): array {
     return $this->manageAcl;
   }
 
@@ -140,7 +140,7 @@ class NxGroupFolder {
    * @return bool
    *   TRUE if the group has access.
    */
-  public function hasManageAclGroup(string $group_id): bool {
+  public function groupIsAclManager(string $group_id): bool {
     return isset($this->manageAcl['group'][$group_id]);
   }
 
@@ -153,7 +153,7 @@ class NxGroupFolder {
    * @return bool
    *   TRUE if the group has access.
    */
-  public function hasManageAclUser(string $user_id): bool {
+  public function userIsAclManager(string $user_id): bool {
     return isset($this->manageAcl['user'][$user_id]);
   }
 
@@ -163,8 +163,18 @@ class NxGroupFolder {
    * @return string[]
    *   Group display names by group id.
    */
-  public function getManageAclGroupIds(): array {
+  public function getAclManagerGroupIds(): array {
     return array_keys($this->manageAcl['group'] ?? []);
+  }
+
+  /**
+   * Gets groups with access to manage access per file.
+   *
+   * @return string[]
+   *   Group display names by group id.
+   */
+  public function getAclManagerUserIds(): array {
+    return array_keys($this->manageAcl['user'] ?? []);
   }
 
 }

@@ -12,9 +12,15 @@ class DataUtil {
   /**
    * Converts stringified integers to true integers.
    *
-   * Empty string becomes NULL.
-   * Other values remain unchanged. The idea is that calling code can do further
-   * validation, and produce error messages with more contextual information.
+   * Also converts '' to NULL. Other values remain unchanged.
+   *
+   * The purpose is to clean up integers that are delivered as strings, e.g.
+   * from a database or from API responses.
+   *
+   * At the same time, non-integer-like values should not be silently converted,
+   * because these point to bugs in the system. Such values are returned
+   * unchanged, leaving further validation to the calling code, which results in
+   * more useful error messages.
    *
    * @param mixed $value
    *   A value which could be a stringified integer, e.g. "6".
@@ -24,7 +30,7 @@ class DataUtil {
    *   If the value was not a stringified integer, the original value is
    *   returned.
    */
-  public static function parseIntIfPossible(mixed $value): mixed {
+  public static function toIntIfPossible(mixed $value): mixed {
     if (is_string($value)) {
       if ($value === '') {
         return NULL;
@@ -33,6 +39,9 @@ class DataUtil {
         return (int) $value;
       }
     }
+    // Return the original value.
+    // It is better if calling code does the validation, to have better context
+    // for failure messages.
     return $value;
   }
 
@@ -50,7 +59,7 @@ class DataUtil {
   public static function bitwiseOr(int ...$args): int {
     return array_reduce(
       $args,
-      fn (int $a, int $b) => $a | $b,
+      static fn (int $a, int $b) => $a | $b,
       0,
     );
   }
@@ -67,7 +76,7 @@ class DataUtil {
   public static function bitwiseAnd(int ...$args): int {
     return array_reduce(
       $args,
-      fn (int $a, int $b) => $a & $b,
+      static fn (int $a, int $b) => $a & $b,
       ~0,
     );
   }

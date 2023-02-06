@@ -8,6 +8,9 @@ namespace Drupal\poc_nextcloud\NxEntity;
  * Value object for a workspace loaded from the API.
  *
  * This assumes the 'workspace' app is installed in Nextcloud.
+ *
+ * Currently this class is only used in the respective submodule, but other
+ * modules might want it available without having the submodule enabled.
  */
 class NxWorkspace {
 

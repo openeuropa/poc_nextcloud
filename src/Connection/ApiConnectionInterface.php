@@ -8,12 +8,14 @@ use Drupal\poc_nextcloud\Response\OcsResponse;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Connection to the Nextcloud API.
+ * Connection to the Nextcloud API, or to a specific path within Nextcloud.
+ *
+ * This is typically a wrapper around a guzzle client.
  */
 interface ApiConnectionInterface {
 
   /**
-   * Gets a new instance with a path suffix appended to the url.
+   * Gets a copied instance with a path suffix appended to the url.
    *
    * @param string $prefix
    *   Path suffix, without leading or trailing slash.
@@ -21,54 +23,64 @@ interface ApiConnectionInterface {
    * @return static
    *   New instance.
    */
-  public function path(string $prefix): static;
+  public function withPath(string $prefix): static;
 
   /**
-   * Gets a new instance with the given query parameters.
+   * Gets a copied instance with the given form values.
    *
-   * @param array $query
-   *   Parameters for GET or POST.
+   * @param array $values
+   *   Form values.
+   *   Any pre-existing values will be replaced.
    *
    * @return static
    *   New instance.
    */
-  public function query(array $query): static;
+  public function withFormValues(array $values): static;
 
   /**
-   * Makes a request to the API.
+   * Gets a copied instance with the given query parameters.
    *
-   * This is for requests that expect a standardized OCS response array.
+   * @param array $query
+   *   Query string parameters.
+   *   Any pre-existing parameters will be replaced.
+   *
+   * @return static
+   *   New instance.
+   */
+  public function withQuery(array $query): static;
+
+  /**
+   * Makes a request to the API, and gets an OCS response object.
    *
    * @param string $method
-   *   One of 'GET' or 'POST'.
+   *   One of 'GET', 'POST', 'PUT', 'DELETE' etc.
    * @param string $path
    *   Path relative to the API base url.
    *   E.g. 'ocs/v1.php/cloud/users' to create a Nextcloud user.
    * @param array $params
-   *   Request parameters.
+   *   Query string parameters for GET, or form values for POST.
    *
    * @return \Drupal\poc_nextcloud\Response\OcsResponse
-   *   Response data (parsed json).
+   *   OCS response object.
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
-   *   Request failed.
+   *   Request failed, or the response does not have the structore of an OCS
+   *   response object.
    *
    * @todo Consider to split this into a different interface.
    */
   public function requestOcs(string $method, string $path = '', array $params = []): OcsResponse;
 
   /**
-   * Makes a request to the API. Gets raw json data.
-   *
-   * This is for requests that expect a random array.
+   * Makes a request to the API, and gets parsed json data.
    *
    * @param string $method
-   *   One of 'GET' or 'POST'.
+   *   One of 'GET', 'POST', 'PUT', 'DELETE' etc.
    * @param string $path
    *   Path relative to the API base url.
    *   E.g. 'ocs/v1.php/cloud/users' to create a Nextcloud user.
-   * @param array $query
-   *   Request parameters.
+   * @param array $params
+   *   Query string parameters for GET, or form values for POST.
    *
    * @return \Drupal\poc_nextcloud\Response\OcsResponse
    *   Response data (parsed json).
@@ -76,23 +88,26 @@ interface ApiConnectionInterface {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   Request failed.
    */
-  public function requestJson(string $method, string $path = '', array $query = []): mixed;
+  public function requestJson(string $method, string $path = '', array $params = []): mixed;
 
   /**
-   * Makes a request to the API. Gets raw json data.
+   * Makes a request to the API, and gets a http response object.
    *
    * This is for requests that expect a random array.
    *
    * @param string $method
-   *   One of 'GET' or 'POST'.
+   *   One of 'GET', 'POST', 'PUT', 'DELETE' etc.
    * @param string $path
    *   Path relative to the API base url.
    *   E.g. 'ocs/v1.php/cloud/users' to create a Nextcloud user.
-   * @param array $query
-   *   Request parameters.
+   * @param array $params
+   *   Query string parameters for GET, or form values for POST.
+   *
+   * @return \Psr\Http\Message\ResponseInterface
+   *   Response.
    *
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function request(string $method, string $path = '', array $query = []): ResponseInterface;
+  public function request(string $method, string $path = '', array $params = []): ResponseInterface;
 
 }

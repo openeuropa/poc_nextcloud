@@ -6,6 +6,9 @@ namespace Drupal\poc_nextcloud\Exception;
 
 /**
  * The API returned a well-formed failure response.
+ *
+ * This exception class contains the part of the response data that is relevant
+ * in case of a failure.
  */
 class FailureResponseException extends NextcloudApiException {
 

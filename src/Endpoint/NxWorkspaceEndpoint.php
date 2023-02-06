@@ -6,6 +6,7 @@ namespace Drupal\poc_nextcloud\Endpoint;
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
+use Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException;
 use Drupal\poc_nextcloud\NxEntity\NxWorkspace;
 
 /**
@@ -31,7 +32,7 @@ class NxWorkspaceEndpoint {
    *   Connection.
    */
   public function __construct(ApiConnectionInterface $connection) {
-    $this->connection = $connection->path('apps/workspace');
+    $this->connection = $connection->withPath('apps/workspace');
   }
 
   /**
@@ -59,8 +60,8 @@ class NxWorkspaceEndpoint {
       || !isset($data['statuscode'])
       || $data['statuscode'] !== 201
     ) {
-      throw new NextcloudApiException(sprintf(
-        'Failed to create workspace %s for group folder %d.',
+      throw new UnexpectedResponseDataException(sprintf(
+        "Unexpected response data from attempt to create workspace '%s' for group folder %d.",
         $workspace_name,
         $group_folder_id,
       ));

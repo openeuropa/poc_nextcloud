@@ -2,23 +2,23 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\poc_nextcloud\Plugin\Field\FieldFormatter;
+namespace Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
+use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
-use Drupal\poc_nextcloud\Endpoint\NxWorkspaceEndpoint;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
+use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
 use Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldType\NextcloudGroupFolderItem;
-use Drupal\poc_nextcloud_group_workspace\Plugin\Field\FieldType\NextcloudWorkspaceItem;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,16 +30,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @FieldFormatter(
  *   id = "poc_nextcloud_group_folder_link",
- *   label = @Translation("Link to group folder in Nextcloudd"),
+ *   label = @Translation("Link to group folder in Nextcloud"),
  *   field_types = {
- *     "poc_nextcloud_workspace",
  *     "poc_nextcloud_group_folder",
  *   }
  * )
  */
 class NextcloudGroupFolderLinkFormatter extends FormatterBase {
-
-  use StringTranslationTrait;
 
   /**
    * Constructor.
@@ -60,12 +57,12 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
    *   Third party settings.
    * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudLinkBuilder
    *   Service to build links to Nextcloud.
-   * @param \Drupal\poc_nextcloud\Endpoint\NxWorkspaceEndpoint $workspaceEndpoint
-   *   Endpoint for Nextcloud workspaces.
    * @param \Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint $groupFolderEndpoint
    *   Endpoint for Nextcloud group folders.
    * @param \Drupal\poc_nextcloud\Endpoint\NxUserEndpoint $userEndpoint
    *   User endpoint.
+   * @param \Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint $groupEndpoint
+   *   Group endpoint.
    * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\Core\Session\AccountInterface $currentUser
@@ -81,14 +78,22 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
     string|MarkupInterface $label,
     string $view_mode,
     array $third_party_settings,
-    private NextcloudUrlBuilder $nextcloudLinkBuilder,
-    private NxWorkspaceEndpoint $workspaceEndpoint,
-    private NxGroupFolderEndpoint $groupFolderEndpoint,
-    private NxUserEndpoint $userEndpoint,
-    private LoggerInterface $logger,
-    private AccountInterface $currentUser,
+    protected NextcloudUrlBuilder $nextcloudLinkBuilder,
+    protected NxGroupFolderEndpoint $groupFolderEndpoint,
+    protected NxUserEndpoint $userEndpoint,
+    protected NxGroupEndpoint $groupEndpoint,
+    protected LoggerInterface $logger,
+    protected AccountInterface $currentUser,
   ) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
+    parent::__construct(
+      $plugin_id,
+      $plugin_definition,
+      $field_definition,
+      $settings,
+      $label,
+      $view_mode,
+      $third_party_settings,
+    );
   }
 
   /**
@@ -99,8 +104,8 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
     array $configuration,
     $plugin_id,
     $plugin_definition,
-  ): self {
-    return new self(
+  ): static {
+    return new static(
       $plugin_id,
       $plugin_definition,
       $configuration['field_definition'],
@@ -109,9 +114,9 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
       $configuration['view_mode'],
       $configuration['third_party_settings'],
       $container->get(NextcloudUrlBuilder::class),
-      $container->get(NxWorkspaceEndpoint::class),
       $container->get(NxGroupFolderEndpoint::class),
       $container->get(NxUserEndpoint::class),
+      $container->get(NxGroupEndpoint::class),
       $container->get('logger.channel.poc_nextcloud'),
       $container->get('current_user'),
     );
@@ -126,7 +131,7 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
    * @todo In the future we should catch the exceptions. For now it is useful to
    *   have them visible.
    */
-  public function viewElements(FieldItemListInterface $items, $langcode) {
+  public function viewElements(FieldItemListInterface $items, $langcode): array {
     $elements = [];
     foreach ($items as $delta => $item) {
       $elements[$delta] = $this->viewElement($item);
@@ -138,7 +143,7 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
   /**
    * Builds the render element for a single field item.
    *
-   * @param \Drupal\poc_nextcloud_group_workspace\Plugin\Field\FieldType\NextcloudWorkspaceItem|\Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldType\NextcloudGroupFolderItem $item
+   * @param \Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldType\NextcloudGroupFolderItem $item
    *   Field item.
    *
    * @return array
@@ -147,34 +152,14 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   Something went wrong in one of the API calls.
    */
-  protected function viewElement(NextcloudWorkspaceItem|NextcloudGroupFolderItem $item): array {
+  protected function viewElement(NextcloudGroupFolderItem $item): array {
     $username = $this->currentUser->getAccountName();
     $nextcloud_user = $this->userEndpoint->load($username);
     if (!$nextcloud_user) {
       return [];
     }
     // @todo Check if user has permission to view the group folder.
-    if ($item instanceof NextcloudGroupFolderItem) {
-      $workspace_id = NULL;
-      $group_folder_id = (int) $item->value;
-    }
-    else {
-      $workspace_id = (int) $item->value;
-      if (!$workspace_id) {
-        return [];
-      }
-      try {
-        $workspace = $this->workspaceEndpoint->load($workspace_id);
-        $group_folder_id = $workspace->getGroupFolderId();
-      }
-      catch (NextcloudApiException) {
-        // The workspace does not exist, or something else went wrong.
-        // Error reporting from this API is not very useful, so no need to log
-        // the exception message.
-        // For a proof of concept print the workspace id.
-        return ['#markup' => '#' . $workspace_id];
-      }
-    }
+    $group_folder_id = (int) $item->value;
     if (!$group_folder_id) {
       return [];
     }
@@ -194,17 +179,40 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
       $groupfolder = NULL;
     }
     if ($groupfolder === NULL) {
-      if ($workspace_id !== NULL) {
-        return [
-          '#markup' => sprintf('#%d / #%d', $workspace_id, $group_folder_id),
-        ];
-      }
-      else {
-        return [
-          '#markup' => '#' . $group_folder_id,
-        ];
-      }
+      return $this->viewMissingGroupFolder($group_folder_id);
     }
+    return $this->viewGroupFolder($groupfolder, $item->getEntity());
+  }
+
+  /**
+   * Views a group folder id where no group folder was found.
+   *
+   * @param int $group_folder_id
+   *   Group folder id.
+   *
+   * @return array
+   *   Render element.
+   *
+   * @todo In final version this should be removed.
+   */
+  protected function viewMissingGroupFolder(int $group_folder_id): array {
+    return [
+      '#markup' => '#' . $group_folder_id,
+    ];
+  }
+
+  /**
+   * Views Nextcloud group folder.
+   *
+   * @param \Drupal\poc_nextcloud\NxEntity\NxGroupFolder $groupfolder
+   *   Group folder.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Drupal entity being viewed.
+   *
+   * @return array
+   *   Render element.
+   */
+  protected function viewGroupFolder(NxGroupFolder $groupfolder, EntityInterface $entity): array {
     $url = $this->nextcloudLinkBuilder->url('apps/files', [
       'dir' => $groupfolder->getMountPoint(),
     ]);
@@ -212,10 +220,11 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
       '#type' => 'link',
       '#url' => $url,
       '#title' => new FormattableMarkup('#@id: @name', [
-        '@id' => $group_folder_id,
+        '@id' => $groupfolder->getId(),
         '@name' => $groupfolder->getMountPoint(),
       ]),
     ];
+
   }
 
 }

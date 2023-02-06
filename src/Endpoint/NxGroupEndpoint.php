@@ -28,7 +28,7 @@ class NxGroupEndpoint {
    *   Connection.
    */
   public function __construct(ApiConnectionInterface $connection) {
-    $this->connection = $connection->path('ocs/v1.php/cloud/groups');
+    $this->connection = $connection->withPath('ocs/v1.php/cloud/groups');
   }
 
   /**
@@ -79,7 +79,7 @@ class NxGroupEndpoint {
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
-  private function updateField(string $group_id, string $key, string $value): void {
+  protected function updateField(string $group_id, string $key, string $value): void {
     $this->groupPath($group_id)
       ->requestOcs('PUT', '', [
         'key' => $key,
@@ -100,6 +100,25 @@ class NxGroupEndpoint {
     $this->groupPath($group_id)
       ->requestOcs('DELETE')
       ->throwIfFailure();
+  }
+
+  /**
+   * Checks if a group id exists.
+   *
+   * This is a convenience method, because the API lacks a dedicated route for
+   * this purpose.
+   *
+   * @param string $group_id
+   *   The group id to check.
+   *
+   * @return bool
+   *   TRUE if it exists, FALSE if not.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   */
+  public function idExists(string $group_id): bool {
+    $ids = $this->loadIds($group_id);
+    return in_array($group_id, $ids);
   }
 
   /**
@@ -189,7 +208,7 @@ class NxGroupEndpoint {
       ], [NULL]))
       ->throwIfFailure()
       ->getData()['groups'];
-    return array_map(fn (array $record) => new NxGroup(
+    return array_map(static fn (array $record) => new NxGroup(
       $record['id'],
       $record['displayname'],
       $record['usercount'],
@@ -228,7 +247,7 @@ class NxGroupEndpoint {
    */
   private function groupPath(string $group_id): ApiConnectionInterface {
     return $this->connection
-      ->path(urlencode($group_id));
+      ->withPath(urlencode($group_id));
   }
 
 }

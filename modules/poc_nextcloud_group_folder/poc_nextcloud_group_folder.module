@@ -2,7 +2,7 @@
 
 /**
  * @file
- * OpenEuropa module.
+ * File with hook implementations.
  */
 
 declare(strict_types = 1);
@@ -109,7 +109,9 @@ function poc_nextcloud_group_folder_group_role_delete(GroupRoleInterface $group_
  *   One of 'insert', 'update', 'delete'.
  */
 function _poc_nextcloud_group_folder_entity_hook(EntityInterface $entity, string $op): void {
-  /** @var \Drupal\poc_nextcloud\EntityHook\EntityHookDispatcher $service */
-  $service = \Drupal::service('poc_nextcloud_group_folder.entity_hook_dispatcher');
-  $service($entity, $op);
+  /** @var \Drupal\poc_nextcloud\EntityObserver\Multicast $observer */
+  $observer = \Drupal::service('poc_nextcloud_group_folder.entity_observer');
+  /* @noinspection PhpUnhandledExceptionInspection */
+  // @todo Handle exceptions in the multicast observer.
+  $observer->entityOp($entity, $op);
 }

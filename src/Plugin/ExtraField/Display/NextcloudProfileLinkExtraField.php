@@ -96,6 +96,7 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
     }
     $url = $this->nextcloudLinkBuilder->url('u/' . urlencode($name));
     return [
+      '#cache' => ['max-age' => 0],
       '#type' => 'link',
       '#url' => $url,
       '#title' => $nextcloud_user->getId(),

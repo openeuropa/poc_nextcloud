@@ -115,6 +115,7 @@ class NextcloudAccountInfoExtraField extends ExtraFieldDisplayFormattedBase impl
       }
     }
     return [
+      '#cache' => ['max-age' => 0],
       '#type' => 'html_tag',
       '#tag' => 'pre',
       '#value' => Yaml::dump([

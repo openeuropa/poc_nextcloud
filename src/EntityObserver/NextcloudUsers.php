@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\poc_nextcloud\EntityHook;
+namespace Drupal\poc_nextcloud\EntityObserver;
 
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\NxEntity\NxUser;
@@ -12,11 +12,9 @@ use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Callback for user hooks.
+ * Creates Nextcloud users for Drupal users.
  */
-class UserSync {
-
-  use StringTranslationTrait;
+class NextcloudUsers implements EntityObserverInterface {
 
   /**
    * Constructor.
@@ -32,6 +30,15 @@ class UserSync {
   ) {}
 
   /**
+   * {@inheritdoc}
+   */
+  public function entityOp(EntityInterface $entity, string $op): void {
+    if ($entity instanceof UserInterface) {
+      $this->userOp($entity, $op);
+    }
+  }
+
+  /**
    * Creates a Nextcloud account for a Drupal user, if applicable.
    *
    * This should be called from hook_user_insert() and hook_user_update().
@@ -42,32 +49,43 @@ class UserSync {
    *   Verb from the hook name, e.g. 'presave', 'update', 'insert', 'delete'.
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
-  public function __invoke(UserInterface $user, string $op): void {
-    $should_have_nextcloud_account = ($op !== 'delete')
-      && $this->shouldHaveNextcloudAccount($user);
+  public function userOp(UserInterface $user, string $op): void {
     $name = $user->getAccountName();
+    $email = $user->getEmail();
     if (!is_string($name) || $name === '') {
       // Something is wrong with the name.
-      $this->logger->warning('No Nextcloud account can be associated with user @uid, because the username is not valid.', ['@uid' => $user->id()]);
+      // This must be some edge case, which can be ignored.
       return;
     }
-    // Check if the user exists.
+    // Check if the user exists in Nextcloud.
     $nextcloud_user = $this->userEndpoint->load($name);
-    if (!$should_have_nextcloud_account) {
-      if ($nextcloud_user !== NULL) {
-        $this->userEndpoint->delete($name);
-      }
-      return;
+    switch ($op) {
+      case 'update':
+      case 'insert':
+        if (!$this->shouldHaveNextcloudAccount($user)) {
+          if ($nextcloud_user !== NULL) {
+            $this->userEndpoint->delete($name);
+          }
+        }
+        elseif ($name && $email) {
+          if ($nextcloud_user === NULL) {
+            $this->createNextcloudAccountFor($user);
+          }
+          else {
+            $this->updateNextcloudAccount($user, $nextcloud_user);
+          }
+        }
+        break;
+
+      case 'delete':
+        if ($nextcloud_user !== NULL) {
+          $this->userEndpoint->delete($name);
+        }
+        break;
     }
-    if ($nextcloud_user === NULL) {
-      $nextcloud_user = $this->createNextcloudAccountFor($user);
-      if ($nextcloud_user === NULL) {
-        // Give up.
-        return;
-      }
-    }
-    $this->updateNextcloudUserEmail($user, $nextcloud_user);
   }
 
   /**
@@ -81,22 +99,26 @@ class UserSync {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   Failed to set email.
    */
-  private function updateNextcloudUserEmail(UserInterface $user, NxUser $nextcloud_user): void {
-    $name = $nextcloud_user->getId();
-    $email = $nextcloud_user->getEmail();
+  private function updateNextcloudAccount(UserInterface $user, NxUser $nextcloud_user): void {
+    $user_id = $nextcloud_user->getId();
 
-    if ($nextcloud_user->getEmail() === $email || !$email) {
-      return;
+    $email = $user->getEmail();
+    if ($nextcloud_user->getEmail() !== $email && $email) {
+      // Email needs updating.
+      $this->userEndpoint->setUserEmail($user_id, $email);
+
+      $this->logger->info("The Nextcloud email address for '@name' was updated from @old to @new.", [
+        '@name' => $user_id,
+        '@old' => $nextcloud_user->getEmail(),
+        '@new' => $email,
+      ]);
     }
 
-    // Email needs updating.
-    $this->userEndpoint->setUserEmail($name, $user->getEmail());
-
-    $this->logger->info("The Nextcloud email address for '@name' was updated from @old to @new.", [
-      '@name' => $name,
-      '@old' => $nextcloud_user->getEmail(),
-      '@new' => $user->getEmail(),
-    ]);
+    $display_name = $user->getDisplayName();
+    if ($display_name && $user->getDisplayName() !== $display_name) {
+      $this->userEndpoint->setUserEmail($user_id, $email);
+      $this->userEndpoint->setUserDisplayName($user_id, $email);
+    }
   }
 
   /**
@@ -105,12 +127,9 @@ class UserSync {
    * @param \Drupal\user\UserInterface $user
    *   Drupal user.
    *
-   * @return \Drupal\poc_nextcloud\NxEntity\NxUser|null
-   *   Nextcloud user.
-   *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
-  private function createNextcloudAccountFor(UserInterface $user): NxUser|null {
+  private function createNextcloudAccountFor(UserInterface $user): void {
     $name = $user->getAccountName();
     $email = $user->getEmail();
     if (!$email) {
@@ -119,34 +138,26 @@ class UserSync {
         '@name' => $name,
       ]);
       // Give up.
-      return NULL;
+      return;
     }
-    try {
-      $this->userEndpoint->insertWithEmail($name, $user->getEmail());
-    }
-    catch (NextcloudApiException $e) {
-      $this->logger->warning("Failed to create Nextcloud account for user @uid / @name: @message", [
-        '@uid' => $user->id(),
-        '@name' => $name,
-        '@message' => $e->getMessage(),
-      ]);
-      // Give up.
-      return NULL;
-    }
+    $this->userEndpoint->insertWithEmail(
+      $name,
+      $user->getEmail(),
+      $user->getDisplayName(),
+    );
     $this->logger->info("A nextcloud account named '@name' was created for user @uid", [
       '@name' => $name,
       '@uid' => $user->id(),
     ]);
     $nextcloud_user = $this->userEndpoint->load($name);
     if ($nextcloud_user === NULL) {
-      $this->logger->warning("Nextcloud account for user @uid / @name was just created, but now it cannot be loaded.", [
-        '@uid' => $user->id(),
-        '@name' => $name,
-      ]);
-      // Give up.
-      return NULL;
+      throw new NextcloudApiException(sprintf(
+        "Nextcloud account %s for user %d / %s was just created, but now it cannot be loaded.",
+        $name,
+        $user->id(),
+        $user->getAccountName(),
+      ));
     }
-    return $nextcloud_user;
   }
 
   /**
@@ -163,6 +174,9 @@ class UserSync {
       return FALSE;
     }
     if ($user->isBlocked()) {
+      return FALSE;
+    }
+    if (!$user->getEmail() || !$user->getAccountName()) {
       return FALSE;
     }
     return TRUE;

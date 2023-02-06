@@ -6,7 +6,7 @@ namespace Drupal\poc_nextcloud\Endpoint;
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\DataUtil;
-use Drupal\poc_nextcloud\Exception\MalformedDataException;
+use Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException;
 use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use Drupal\poc_nextcloud\Response\OcsResponse;
 
@@ -29,7 +29,7 @@ class NxGroupFolderEndpoint {
    *   Connection.
    */
   public function __construct(ApiConnectionInterface $connection) {
-    $this->connection = $connection->path('apps/groupfolders/folders');
+    $this->connection = $connection->withPath('apps/groupfolders/folders');
   }
 
   /**
@@ -176,7 +176,6 @@ class NxGroupFolderEndpoint {
    * @param string $group_id
    *   Group id.
    *
-   * @throws \Drupal\poc_nextcloud\Exception\FailureResponseException
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
   public function addGroup(int $group_folder_id, string $group_id): void {
@@ -323,14 +322,14 @@ class NxGroupFolderEndpoint {
    * @return \Drupal\poc_nextcloud\NxEntity\NxGroupFolder
    *   New group folder object
    *
-   * @throws \Drupal\poc_nextcloud\Exception\MalformedDataException
+   * @throws \Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException
    */
   private function createGroupFolderFromData(array $data): NxGroupFolder {
     if (!isset($data['id'])) {
-      throw new MalformedDataException('Missing group folder id in response data.');
+      throw new UnexpectedResponseDataException('Missing group folder id in response data.');
     }
     if (!isset($data['mount_point'])) {
-      throw new MalformedDataException('Missing group folder mount point in response data.');
+      throw new UnexpectedResponseDataException('Missing group folder mount point in response data.');
     }
     $manage_acl = [];
     foreach ($data['manage'] as $record) {
@@ -341,14 +340,14 @@ class NxGroupFolderEndpoint {
         $data['id'],
         $data['mount_point'],
         $data['groups'] ?? [],
-        DataUtil::parseIntIfPossible($data['quota']) ?? 0,
-        DataUtil::parseIntIfPossible($data['size']) ?? 0,
+        DataUtil::toIntIfPossible($data['quota']) ?? 0,
+        DataUtil::toIntIfPossible($data['size']) ?? 0,
         $data['acl'] ?? FALSE,
         $manage_acl,
       );
     }
     catch (\TypeError $e) {
-      throw new MalformedDataException($e->getMessage(), 0, $e);
+      throw new UnexpectedResponseDataException($e->getMessage(), 0, $e);
     }
   }
 
@@ -379,7 +378,7 @@ class NxGroupFolderEndpoint {
    *   New connection instance.
    */
   private function folderPath(int $group_folder_id, string $sub_path = ''): ApiConnectionInterface {
-    return $this->connection->path($group_folder_id . $sub_path);
+    return $this->connection->withPath($group_folder_id . $sub_path);
   }
 
 }
