@@ -22,7 +22,7 @@ drupal:
     - "./vendor/bin/drush config-set node.settings use_admin_theme 1 -y"
     # Enable the modules.
     - "./vendor/bin/drush en config_devel -y"
-    - "./vendor/bin/drush en poc_nextcloud -y"
+    - "./vendor/bin/drush en poc_nextcloud_demo -y"
     - "./vendor/bin/drush cr"
   settings:
     settings:

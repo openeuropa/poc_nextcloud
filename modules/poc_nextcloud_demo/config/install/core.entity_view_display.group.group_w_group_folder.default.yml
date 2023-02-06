@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group.group_w_group_folder.field_group_folder
+    - group.type.group_w_group_folder
+  module:
+    - poc_nextcloud_group_folder
+id: group.group_w_group_folder.default
+targetEntityType: group
+bundle: group_w_group_folder
+mode: default
+content:
+  field_group_folder:
+    type: poc_nextcloud_group_folder_info
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: -4
+    region: content
+  label:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: -5
+    region: content
+hidden:
+  changed: true
+  created: true
+  uid: true

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.group_w_group_folder
+id: group.group_w_group_folder.label
+field_name: label
+entity_type: group
+bundle: group_w_group_folder
+label: Title
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

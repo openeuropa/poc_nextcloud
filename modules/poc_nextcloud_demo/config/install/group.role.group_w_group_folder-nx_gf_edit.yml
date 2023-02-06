@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.group_w_group_folder
+id: group_w_group_folder-nx_gf_edit
+label: 'Edit Nextcloud group folder content'
+weight: 7
+internal: false
+audience: member
+group_type: group_w_group_folder
+permissions_ui: true
+permissions:
+  - 'nextcloud group folder delete'
+  - 'nextcloud group folder read'
+  - 'nextcloud group folder write'
