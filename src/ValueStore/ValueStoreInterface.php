@@ -7,6 +7,8 @@ namespace Drupal\poc_nextcloud\ValueStore;
 /**
  * Object to store a single value.
  *
+ * Typically this will be a wrapper around another storage class.
+ *
  * @todo Check if a class/interface like this already exists somewhere.
  */
 interface ValueStoreInterface {

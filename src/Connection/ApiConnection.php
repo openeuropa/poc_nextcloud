@@ -5,18 +5,16 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Connection;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\poc_nextcloud\CookieJar\ValueStoreCookieJar;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\Exception\ResponseInvalidJsonException;
 use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Response\OcsResponse;
 use Drupal\poc_nextcloud\ValueStore\ValueStoreInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Cookie\CookieJar;
-use GuzzleHttp\Cookie\CookieJarInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Default implementation.
@@ -39,14 +37,25 @@ class ApiConnection implements ApiConnectionInterface {
    *   Http client.
    * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
    *   Storage for cookies.
+   *   Without this, the API would need to verify the login credentials on every
+   *   request, which can result in factor 10 slowdown.
    * @param string $baseUrl
    *   Url of Nextcloud instance.
+   *
+   * @todo Consider token-based authentication.
+   * @todo Consider to add encryption decorator for the cookie store.
    */
   public function __construct(
     private ClientInterface $client,
-    private ValueStoreInterface $cookieStore,
+    ValueStoreInterface $cookieStore,
     private string $baseUrl,
-  ) {}
+  ) {
+    $this->options['cookies'] = new ValueStoreCookieJar(
+      $cookieStore,
+      TRUE,
+      TRUE,
+    );
+  }
 
   /**
    * Creates a new instance from config values.
@@ -57,8 +66,6 @@ class ApiConnection implements ApiConnectionInterface {
    *   Http client.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Drupal configuration factory.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   Logger.
    * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
    *   Value store for cookie data.
    *
@@ -70,7 +77,6 @@ class ApiConnection implements ApiConnectionInterface {
   public static function fromConfig(
     ClientInterface $client,
     ConfigFactoryInterface $config_factory,
-    LoggerInterface $logger,
     ValueStoreInterface $cookieStore,
   ): self {
     $settings = $config_factory->get('poc_nextcloud.settings');
@@ -89,7 +95,6 @@ class ApiConnection implements ApiConnectionInterface {
     $url = rtrim($url, '/') . '/';
     return self::fromValues(
       $client,
-      $logger,
       $cookieStore,
       $url,
       $username,
@@ -101,8 +106,6 @@ class ApiConnection implements ApiConnectionInterface {
    *
    * @param \GuzzleHttp\ClientInterface $client
    *   Http client.
-   * @param \Psr\Log\LoggerInterface $logger
-   *   Logger.
    * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
    *   Storage for cookie data.
    * @param string $url
@@ -119,7 +122,6 @@ class ApiConnection implements ApiConnectionInterface {
    */
   public static function fromValues(
     ClientInterface $client,
-    LoggerInterface $logger,
     ValueStoreInterface $cookieStore,
     string $url,
     string $username,
@@ -131,7 +133,7 @@ class ApiConnection implements ApiConnectionInterface {
     if (!preg_match('@^(?:http|https)://\w+(?:\.\w+)*/(?:\w+/)*$@', $url)) {
       throw new ServiceNotAvailableException('Nextcloud url does not have the expected format.');
     }
-    return (new self($client, $logger, $cookieStore, $url))
+    return (new self($client, $cookieStore, $url))
       ->withAuth($username, $pass)
       ->withHeader('OCS-APIRequest', 'true')
       // @todo Do all API requests need the same headers?
@@ -164,7 +166,6 @@ class ApiConnection implements ApiConnectionInterface {
     $clone = clone $this;
     $clone->options[RequestOptions::FORM_PARAMS] = $values;
     return $clone;
-
   }
 
   /**
@@ -279,9 +280,10 @@ class ApiConnection implements ApiConnectionInterface {
         $method,
         $this->baseUrl . $path,
         // Show parameter names, but not values.
-        json_encode(
-          array_map(static fn () => '*', $params),
-        ),
+        json_encode(array_map(
+          static fn () => '*',
+          $params,
+        )),
         $e->getMessage(),
       ), 0, $e);
     }
@@ -302,37 +304,7 @@ class ApiConnection implements ApiConnectionInterface {
         $options[RequestOptions::FORM_PARAMS] = $params;
       }
     }
-    $cookies_data_before = $this->cookieStore->get();
-    $options['cookies'] = $jar = new CookieJar(TRUE, $cookies_data_before);
-    $response = $this->client->request($method, $url, $options);
-    $cookies_data_after = $this->exportCookiesInJar($jar);
-    if ($cookies_data_after !== $cookies_data_before) {
-      $this->cookieStore->set($cookies_data_after);
-    }
-    return $response;
-  }
-
-  /**
-   * Converts cookies as array.
-   *
-   * This is different from CookieJar->toArray(), in that it only exports
-   * cookies that are meant to be persisted.
-   *
-   * @param \GuzzleHttp\Cookie\CookieJarInterface $jar
-   *   Cookie jar.
-   *
-   * @return array
-   *   Data from the cookies.
-   */
-  private function exportCookiesInJar(CookieJarInterface $jar): array {
-    $data = [];
-    /** @var \GuzzleHttp\Cookie\SetCookie $cookie */
-    foreach ($jar->getIterator() as $cookie) {
-      if (CookieJar::shouldPersist($cookie, TRUE)) {
-        $data[] = $cookie->toArray();
-      }
-    }
-    return $data;
+    return $this->client->request($method, $url, $options);
   }
 
 }

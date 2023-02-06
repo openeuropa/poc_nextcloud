@@ -11,7 +11,8 @@ use Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException;
 /**
  * Value object for a response from the Nextcloud API.
  *
- * Most of the Nextcloud APIs return responses with this structure.
+ * Responses from most Nextcloud APIs follow the "OpenCloudMesh specification".
+ * See https://lukasreschke.github.io/OpenCloudMeshSpecification/
  */
 class OcsResponse {
 
