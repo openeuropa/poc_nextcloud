@@ -12,6 +12,7 @@ use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Response\OcsResponse;
 use Drupal\poc_nextcloud\ValueStore\ValueStoreInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Cookie\CookieJarInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
@@ -35,27 +36,13 @@ class ApiConnection implements ApiConnectionInterface {
    *
    * @param \GuzzleHttp\ClientInterface $client
    *   Http client.
-   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
-   *   Storage for cookies.
-   *   Without this, the API would need to verify the login credentials on every
-   *   request, which can result in factor 10 slowdown.
    * @param string $baseUrl
    *   Url of Nextcloud instance.
-   *
-   * @todo Consider token-based authentication.
-   * @todo Consider to add encryption decorator for the cookie store.
    */
   public function __construct(
     private ClientInterface $client,
-    ValueStoreInterface $cookieStore,
     private string $baseUrl,
-  ) {
-    $this->options['cookies'] = new ValueStoreCookieJar(
-      $cookieStore,
-      TRUE,
-      TRUE,
-    );
-  }
+  ) {}
 
   /**
    * Creates a new instance from config values.
@@ -67,12 +54,18 @@ class ApiConnection implements ApiConnectionInterface {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Drupal configuration factory.
    * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
-   *   Value store for cookie data.
+   *   Storage for cookies.
+   *   Without this, the API would need to verify the login credentials on every
+   *   request, which can make these requests 10x slower, e.g. 200ms with auth,
+   *   but 20ms with session cookie.
    *
    * @return self
    *   New connection.
    *
    * @throws \Drupal\poc_nextcloud\Exception\ServiceNotAvailableException
+   *
+   * @todo Consider token-based authentication.
+   * @todo Consider to add encryption decorator for the cookie store.
    */
   public static function fromConfig(
     ClientInterface $client,
@@ -85,20 +78,25 @@ class ApiConnection implements ApiConnectionInterface {
       $values[$key] = $settings->get($key) ?? '';
     }
     if (in_array('', $values)) {
-      throw new ServiceNotAvailableException(
-        sprintf(
-          'Missing or empty configuration keys: %s keys.',
-          implode(', ', array_keys($values, '', TRUE)),
-        ));
+      throw new ServiceNotAvailableException(sprintf(
+        'Missing or empty configuration keys: %s keys.',
+        implode(', ', array_keys($values, '', TRUE)),
+      ));
     }
     [$url, $username, $pass] = array_values($values);
     $url = rtrim($url, '/') . '/';
+
     return self::fromValues(
       $client,
-      $cookieStore,
       $url,
       $username,
-      $pass);
+      $pass,
+    )
+      ->withCookieJar(new ValueStoreCookieJar(
+        $cookieStore,
+        TRUE,
+        TRUE,
+      ));
   }
 
   /**
@@ -106,8 +104,6 @@ class ApiConnection implements ApiConnectionInterface {
    *
    * @param \GuzzleHttp\ClientInterface $client
    *   Http client.
-   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
-   *   Storage for cookie data.
    * @param string $url
    *   Url of the Nextcloud instance, with trailing slash.
    * @param string $username
@@ -122,7 +118,6 @@ class ApiConnection implements ApiConnectionInterface {
    */
   public static function fromValues(
     ClientInterface $client,
-    ValueStoreInterface $cookieStore,
     string $url,
     string $username,
     string $pass,
@@ -133,13 +128,28 @@ class ApiConnection implements ApiConnectionInterface {
     if (!preg_match('@^(?:http|https)://\w+(?:\.\w+)*/(?:\w+/)*$@', $url)) {
       throw new ServiceNotAvailableException('Nextcloud url does not have the expected format.');
     }
-    return (new self($client, $cookieStore, $url))
+    return (new self($client, $url))
       ->withAuth($username, $pass)
       ->withHeader('OCS-APIRequest', 'true')
       // @todo Do all API requests need the same headers?
       ->withHeader('Content-Type', 'application/x-www-form-urlencoded')
       // Always send json header.
       ->withHeader('accept', 'application/json');
+  }
+
+  /**
+   * Immutable setter. Sets a cookie jar.
+   *
+   * @param \GuzzleHttp\Cookie\CookieJarInterface $cookieJar
+   *   Cookie jar.
+   *
+   * @return static
+   *   Modified instance.
+   */
+  public function withCookieJar(CookieJarInterface $cookieJar): static {
+    $clone = clone $this;
+    $clone->options['cookies'] = $cookieJar;
+    return $clone;
   }
 
   /**
