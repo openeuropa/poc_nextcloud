@@ -51,9 +51,7 @@ echo '-------------------------------------------------------------------------'
 echo ''
 cd /var/www/html
 sudo -E -u www-data ./occ app:install groupfolders
-sudo -E -u www-data ./occ app:install workspace
 sudo -E -u www-data ./occ app:enable groupfolders
-sudo -E -u www-data ./occ app:enable --force workspace
 
 echo ''
 echo '                                                        Set configuration'
