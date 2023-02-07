@@ -188,6 +188,7 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
     $drupal_group_type = $drupal_group?->getGroupType();
     $image = new UserGroupsImage(
       $this->userEndpoint,
+      $this->groupEndpoint,
       $nextcloud_user->getId(),
       $this->groupRoleToGroupId->getGroupNamespaceRegex(
         $drupal_group,

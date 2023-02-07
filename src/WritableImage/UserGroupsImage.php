@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\poc_nextcloud\WritableImage;
 
+use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 
 /**
@@ -26,6 +27,8 @@ class UserGroupsImage {
    *
    * @param \Drupal\poc_nextcloud\Endpoint\NxUserEndpoint $userEndpoint
    *   User endpoint.
+   * @param \Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint $groupEndpoint
+   *   Group endpoint.
    * @param string $userId
    *   User id.
    * @param string $groupIdRegex
@@ -33,6 +36,7 @@ class UserGroupsImage {
    */
   public function __construct(
     private NxUserEndpoint $userEndpoint,
+    private NxGroupEndpoint $groupEndpoint,
     private string $userId,
     private string $groupIdRegex,
   ) {}
@@ -61,6 +65,8 @@ class UserGroupsImage {
    */
   public function write(): void {
     $group_ids = array_keys($this->groupIdsMap);
+    $existing_group_ids = $this->groupEndpoint->loadIds();
+    $group_ids = array_intersect($group_ids, $existing_group_ids);
     $current_group_ids = $this->userEndpoint->getGroupIds($this->userId);
     $current_group_ids = preg_grep($this->groupIdRegex, $current_group_ids);
     $group_ids_to_leave = array_diff($current_group_ids, $group_ids);
