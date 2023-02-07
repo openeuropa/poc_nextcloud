@@ -10,10 +10,12 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
+use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
 use Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldType\NextcloudGroupFolderItem;
@@ -102,22 +104,32 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
     array $configuration,
     $plugin_id,
     $plugin_definition,
-  ): static {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['label'],
-      $configuration['view_mode'],
-      $configuration['third_party_settings'],
-      $container->get(NextcloudUrlBuilder::class),
-      $container->get(NxGroupFolderEndpoint::class),
-      $container->get(NxUserEndpoint::class),
-      $container->get(NxGroupEndpoint::class),
-      $container->get('logger.channel.poc_nextcloud'),
-      $container->get('current_user'),
-    );
+  ): FormatterInterface {
+    try {
+      return new static(
+        $plugin_id,
+        $plugin_definition,
+        $configuration['field_definition'],
+        $configuration['settings'],
+        $configuration['label'],
+        $configuration['view_mode'],
+        $configuration['third_party_settings'],
+        $container->get(NextcloudUrlBuilder::class),
+        $container->get(NxGroupFolderEndpoint::class),
+        $container->get(NxUserEndpoint::class),
+        $container->get(NxGroupEndpoint::class),
+        $container->get('logger.channel.poc_nextcloud'),
+        $container->get('current_user'),
+      );
+    }
+    catch (ServiceNotAvailableException) {
+      return EmptyFieldFormatter::create(
+        $container,
+        $configuration,
+        $plugin_id,
+        $plugin_definition,
+      );
+    }
   }
 
   /**

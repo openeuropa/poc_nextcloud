@@ -9,6 +9,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\extra_field\Plugin\ExtraFieldDisplayFormattedBase;
+use Drupal\extra_field\Plugin\ExtraFieldDisplayInterface;
+use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
 use Drupal\poc_nextcloud\Service\NextcloudUserMap;
 use Drupal\user\UserInterface;
@@ -57,14 +59,28 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
-    return new self(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get(NextcloudUserMap::class),
-      $container->get(NextcloudUrlBuilder::class),
-    );
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  ): ExtraFieldDisplayInterface {
+    try {
+      return new self(
+        $configuration,
+        $plugin_id,
+        $plugin_definition,
+        $container->get(NextcloudUserMap::class),
+        $container->get(NextcloudUrlBuilder::class),
+      );
+    }
+    catch (ServiceNotAvailableException) {
+      return new EmptyExtraField(
+        $configuration,
+        $plugin_id,
+        $plugin_definition,
+      );
+    }
   }
 
   /**
