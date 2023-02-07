@@ -6,9 +6,11 @@ namespace Drupal\poc_nextcloud\Endpoint;
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
 use Drupal\poc_nextcloud\DataUtil;
+use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException;
 use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use Drupal\poc_nextcloud\Response\OcsResponse;
+use GuzzleHttp\Exception\ServerException;
 
 /**
  * Endpoint for Nextcloud group folders.
@@ -98,8 +100,28 @@ class NxGroupFolderEndpoint {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
   public function load(int $group_folder_id): NxGroupFolder|null {
-    $response = $this->folderPath($group_folder_id)
-      ->requestOcs('GET');
+    try {
+      $response = $this->folderPath($group_folder_id)
+        ->requestOcs('GET');
+    }
+    catch (NextcloudApiException $e) {
+      $prev = $e->getPrevious();
+      if ($prev instanceof ServerException) {
+        $response = $prev->getResponse();
+        if ($response->getStatusCode() === 500
+          && str_contains(
+            (string) $response->getBody(),
+            'FolderManager::getFolder(): Return value must be of type array, bool returned',
+          )
+        ) {
+          // There is a bug in Nextcloud if no groupfolder is found.
+          // See https://github.com/nextcloud/groupfolders/issues/2241.
+          // @todo Clean this up once the bug is fixed.
+          return NULL;
+        }
+      }
+      throw $e;
+    }
     if ($response->getData() === FALSE) {
       return NULL;
     }
