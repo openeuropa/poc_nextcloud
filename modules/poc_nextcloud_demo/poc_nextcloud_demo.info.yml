@@ -14,6 +14,7 @@ config_devel:
   - core.entity_form_display.group_content.group_content_type_a92588b2a868d.default
   - core.entity_view_display.group.group_w_group_folder.default
   - core.entity_view_display.group_content.group_content_type_a92588b2a868d.default
+  - core.entity_view_display.user.user.full
   - field.field.group.group_w_group_folder.field_group_folder
   - field.field.group_content.group_content_type_a92588b2a868d.group_roles
   - field.storage.group.field_group_folder
