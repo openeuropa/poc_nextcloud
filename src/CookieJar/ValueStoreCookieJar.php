@@ -38,7 +38,7 @@ class ValueStoreCookieJar extends PersistentCookieJarBase {
    * {@inheritdoc}
    */
   protected function loadData(): array {
-    return $this->valueStore->get();
+    return $this->valueStore->get() ?? [];
   }
 
   /**
