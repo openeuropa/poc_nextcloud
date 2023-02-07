@@ -23,6 +23,10 @@ drupal:
     # Enable the modules.
     - "./vendor/bin/drush en config_devel -y"
     - "./vendor/bin/drush en poc_nextcloud_demo -y"
+    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_user admin -y"
+    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_pass admin -y"
+    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_url http://nextcloud/ -y"
+    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_web_url http://localhost:8081/ -y"
     - "./vendor/bin/drush cr"
   settings:
     settings:
