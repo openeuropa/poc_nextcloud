@@ -50,6 +50,9 @@ class NextcloudGroups implements EntityObserverInterface {
    * {@inheritdoc}
    */
   public function entityOp(EntityInterface $entity, string $op): void {
+    if (!in_array($op, ['update', 'insert', 'delete'])) {
+      return;
+    }
     if ($entity instanceof GroupInterface) {
       $this->updateScope(
         $entity->getGroupType(),
