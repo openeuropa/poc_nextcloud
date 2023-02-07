@@ -11,11 +11,9 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Utility\Error;
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
-use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
 use Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldType\NextcloudGroupFolderItem;
@@ -163,21 +161,7 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
     if (!$group_folder_id) {
       return [];
     }
-    try {
-      $groupfolder = $this->groupFolderEndpoint->load($group_folder_id);
-    }
-    catch (NextcloudApiException $e) {
-      $this->logger->warning('Error when loading group folder @group_folder_id for group @group_id:\n@exception', [
-        '@group_folder_id' => $group_folder_id,
-        '@group_id' => $item->getEntity()->id(),
-        /* @see watchdog_exception() */
-        '@exception' => new FormattableMarkup(
-          Error::DEFAULT_ERROR_MESSAGE,
-          Error::decodeException($e),
-        ),
-      ]);
-      $groupfolder = NULL;
-    }
+    $groupfolder = $this->groupFolderEndpoint->load($group_folder_id);
     if ($groupfolder === NULL) {
       return $this->viewMissingGroupFolder($group_folder_id);
     }
