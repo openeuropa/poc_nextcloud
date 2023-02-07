@@ -48,29 +48,30 @@ class Multicast implements EntityObserverInterface {
     LoggerInterface $logger,
     array $service_ids,
   ): self {
-    try {
-      $observers = [];
-      foreach ($service_ids as $service_id) {
+    $observers = [];
+    foreach ($service_ids as $service_id) {
+      try {
         $candidate = $container->get($service_id);
-        if (!$candidate instanceof EntityObserverInterface) {
-          throw new InvalidArgumentException(sprintf(
-            'Expected a %s for service id %s, found %s.',
-            EntityObserverInterface::class,
-            $service_id,
-            get_debug_type($candidate),
-          ));
-        }
-        $observers[] = $candidate;
       }
-      return new self($observers);
+      catch (ServiceNotAvailableException $e) {
+        // Only log as info, so not to disrupt site installation.
+        $logger->info("Service '@service_id' is currently not available. Message: @message.", [
+          '@service_id' => $service_id ?? '?',
+          '@message' => $e->getMessage(),
+        ]);
+        return new self([]);
+      }
+      if (!$candidate instanceof EntityObserverInterface) {
+        throw new InvalidArgumentException(sprintf(
+          'Expected a %s for service id %s, found %s.',
+          EntityObserverInterface::class,
+          $service_id,
+          get_debug_type($candidate),
+        ));
+      }
+      $observers[] = $candidate;
     }
-    catch (ServiceNotAvailableException $e) {
-      $logger->warning("Service '@service_id' is currently not available. Message: @message.", [
-        '@service_id' => $callback_service_id ?? '?',
-        '@message' => $e->getMessage(),
-      ]);
-      return new self([]);
-    }
+    return new self($observers);
   }
 
   /**
