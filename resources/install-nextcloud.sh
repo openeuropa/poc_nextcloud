@@ -52,6 +52,8 @@ echo ''
 cd /var/www/html
 sudo -E -u www-data ./occ app:install groupfolders
 sudo -E -u www-data ./occ app:enable groupfolders
+sudo -E -u www-data ./occ app:install user_saml
+sudo -E -u www-data ./occ app:enable user_saml
 
 echo ''
 echo '                                                        Set configuration'

@@ -45,6 +45,7 @@ services:
       - nextcloud_db
     volumes:
       - ./resources/install-nextcloud.sh:/usr/bin/install-nextcloud.sh:ro
+      - ./resources/user_cas_eulogin/:/var/www/html/custom_apps/user_cas/
     environment:
       - MYSQL_PASSWORD=nextpw
       - MYSQL_DATABASE=nextcloud
