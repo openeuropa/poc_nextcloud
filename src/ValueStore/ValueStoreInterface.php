@@ -18,6 +18,10 @@ interface ValueStoreInterface {
    *
    * @return mixed
    *   Value, or NULL if not initialized.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\ValueException
+   *   Value cannot be read.
+   *   Possibly the storage contains bad data, or the storage is failing.
    */
   public function get(): mixed;
 
@@ -26,6 +30,10 @@ interface ValueStoreInterface {
    *
    * @param mixed $value
    *   New value.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\ValueException
+   *   Value cannot be written.
+   *   Possibly the data is not suitable for storage, or the storage is failing.
    */
   public function set(mixed $value): void;
 

@@ -17,3 +17,6 @@ poc_nextcloud.settings:
       # @todo Think of a safer way to store the password.
       type: string
       label: 'Password for nextcloud API requests.'
+    storage_encryption_key:
+      type: string
+      label: 'Passphrase to encrypt cookies or API tokens in the database.'

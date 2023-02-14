@@ -5,13 +5,18 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Connection;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\State\StateInterface;
 use Drupal\poc_nextcloud\CookieJar\ValueStoreCookieJar;
+use Drupal\poc_nextcloud\Crypt\OpenSSLCryptor;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\Exception\ResponseInvalidJsonException;
 use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Response\OcsResponse;
-use Drupal\poc_nextcloud\ValueStore\ValueStoreInterface;
+use Drupal\poc_nextcloud\ValueStore\CryptValueStore;
+use Drupal\poc_nextcloud\ValueStore\StateValueStore;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Cookie\CookieJarInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
@@ -53,8 +58,8 @@ class ApiConnection implements ApiConnectionInterface {
    *   Http client.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Drupal configuration factory.
-   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $cookieStore
-   *   Storage for cookies.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   Drupal state, used to persist cookies between Drupal requests.
    *   Without this, the API would need to verify the login credentials on every
    *   request, which can make these requests 10x slower, e.g. 200ms with auth,
    *   but 20ms with session cookie.
@@ -65,12 +70,11 @@ class ApiConnection implements ApiConnectionInterface {
    * @throws \Drupal\poc_nextcloud\Exception\ServiceNotAvailableException
    *
    * @todo Consider token-based authentication.
-   * @todo Consider to add encryption decorator for the cookie store.
    */
   public static function fromConfig(
     ClientInterface $client,
     ConfigFactoryInterface $config_factory,
-    ValueStoreInterface $cookieStore,
+    StateInterface $state,
   ): self {
     $settings = $config_factory->get('poc_nextcloud.settings');
     $values = [];
@@ -86,17 +90,47 @@ class ApiConnection implements ApiConnectionInterface {
     [$url, $username, $pass] = array_values($values);
     $url = rtrim($url, '/') . '/';
 
-    return self::fromValues(
+    $instance = self::fromValues(
       $client,
       $url,
       $username,
       $pass,
-    )
-      ->withCookieJar(new ValueStoreCookieJar(
-        $cookieStore,
-        TRUE,
-        TRUE,
-      ));
+    );
+
+    $cookie_jar = self::createCookieJar($state, $settings);
+
+    return $instance->withCookieJar($cookie_jar);
+  }
+
+  /**
+   * Creates a cookie jar.
+   *
+   * @param \Drupal\Core\State\StateInterface $state
+   *   Drupal state storage.
+   * @param \Drupal\Core\Config\ImmutableConfig $settings
+   *   Settings for this module.
+   *
+   * @return \GuzzleHttp\Cookie\CookieJar
+   *   Cookie jar.
+   */
+  private static function createCookieJar(
+    StateInterface $state,
+    ImmutableConfig $settings,
+  ): CookieJar {
+    $crypt_secret = $settings->get('storage_encryption_key');
+    if (!$crypt_secret) {
+      // Create a cookie jar that only lasts for a single Drupal request.
+      return new CookieJar();
+    }
+    // Create a cookie jar that persists between Drupal requests.
+    $cryptor = new OpenSSLCryptor($crypt_secret);
+    $cookie_store = new StateValueStore($state, 'poc_nextcloud.connection_cookies');
+    $cookie_store = new CryptValueStore($cookie_store, $cryptor);
+    return new ValueStoreCookieJar(
+      $cookie_store,
+      TRUE,
+      TRUE,
+    );
   }
 
   /**
@@ -120,6 +154,7 @@ class ApiConnection implements ApiConnectionInterface {
     ClientInterface $client,
     string $url,
     string $username,
+    #[\SensitiveParameter]
     string $pass,
   ): self {
     if ($url === '' || $username === '' || $pass === '') {

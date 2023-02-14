@@ -4,9 +4,6 @@ services:
   logger.channel.poc_nextcloud:
     parent: logger.channel_base
     arguments: ['poc_nextcloud']
-  poc_nextcloud.connection_cookie_store:
-    class: Drupal\poc_nextcloud\ValueStore\StateValueStore
-    arguments: ['@state', 'poc_nextcloud.connection_cookies']
   # Services that depend on the nextcloud connection will cause exception if
   # Nextcloud is not configured.
   Drupal\poc_nextcloud\Connection\ApiConnectionInterface:
@@ -14,7 +11,7 @@ services:
     arguments:
       - '@http_client'
       - '@config.factory'
-      - '@poc_nextcloud.connection_cookie_store'
+      - '@state'
   Drupal\poc_nextcloud\Service\NextcloudUserMap: {}
   Drupal\poc_nextcloud\Service\NextcloudUrlBuilder:
     factory: [~, create]

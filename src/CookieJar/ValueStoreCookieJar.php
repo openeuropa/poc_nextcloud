@@ -38,6 +38,7 @@ class ValueStoreCookieJar extends PersistentCookieJarBase {
    * {@inheritdoc}
    */
   protected function loadData(): array {
+    // @todo Catch and log.
     return $this->valueStore->get() ?? [];
   }
 
@@ -45,6 +46,7 @@ class ValueStoreCookieJar extends PersistentCookieJarBase {
    * {@inheritdoc}
    */
   protected function saveData(array $data): void {
+    // @todo Catch and log.
     $this->valueStore->set($data);
   }
 
