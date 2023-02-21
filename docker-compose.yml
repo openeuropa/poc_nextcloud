@@ -5,7 +5,7 @@ services:
     image: fpfis/httpd-php-dev:8.0
     working_dir: /var/www/html
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - .:/var/www/html # Non Mac users.
       # - nfsmount:/var/www/html # Mac Users with the nfsmount volume.
@@ -40,7 +40,7 @@ services:
     image: nextcloud:25-apache
     restart: always
     ports:
-      - 8081:80
+      - "8081:80"
     links:
       - nextcloud_db
     volumes:
