@@ -2,7 +2,7 @@
 # It should only be executed in that container.
 
 echo ''
-echo '                                                  install system packages'
+echo '                                                  Install system packages'
 echo '-------------------------------------------------------------------------'
 echo ''
 apt-get update
@@ -14,7 +14,7 @@ apt-get install -y --no-install-recommends less nano
 apt-get install -y --no-install-recommends mariadb-client
 
 echo ''
-echo '                                                        Install nextcloud'
+echo '                                            Verify Nextcloud installation'
 echo '-------------------------------------------------------------------------'
 cd /var/www/html
 if sudo -E -u www-data ./occ status | grep -q 'installed: true'; then
