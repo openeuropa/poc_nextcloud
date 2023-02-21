@@ -21,11 +21,6 @@ docker-compose exec web ./vendor/bin/run drupal:site-install
 docker-compose exec web ./vendor/bin/drush uli
 ```
 
-### Fix theme and blocks
-
-For some reason, in bartik theme there are no blocks.
-The simplest fix is to switch to Olivero theme.
-
 ### Get started
 
 User:
