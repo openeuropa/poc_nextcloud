@@ -26,6 +26,12 @@ drupal:
     - "./vendor/bin/drush en config_devel -y"
     - "./vendor/bin/drush en poc_nextcloud_demo -y"
     - "./vendor/bin/drush en oe_authentication -y"
+    # Install EU Login mock, and create test users.
+    - "./vendor/bin/drush en oe_authentication_eulogin_mock -y"
+    - "./vendor/bin/drush cas-mock-server:start"
+    - "./vendor/bin/drush casms-uc alfonso --email=alfonso@example.com --password=alfonsopw"
+    - "./vendor/bin/drush casms-uc eliza --email=eliza@example.com --password=elizapw"
+    - "./vendor/bin/drush casms-uc pawel --email=pawel@example.com --password=pawelpw"
     # Configure Nextcloud connection.
     - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_user admin -y"
     - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_pass admin -y"
@@ -52,6 +58,16 @@ commands:
     - { task: "run", command: "drupal:symlink-project" }
     - { task: "run", command: "drupal:drush-setup" }
     - { task: "run", command: "drupal:settings-setup" }
+    - task: "append"
+      file: "build/sites/default/settings.override.php"
+      text: |
+        // Settings for the mock server, as in oe_authentication.
+        // SSL Configuration to not verify CAS server. DO NOT USE IN PRODUCTION!
+        $config['cas.settings']['server']['verify'] = '2';
+        $config['oe_authentication.settings']['protocol'] = 'eulogin';
+        // Use the original validation path, as needed for Nextcloud user_cas.
+        $config['oe_authentication.settings']['validation_path'] = 'p3/serviceValidate';
+
     - { task: "run", command: "setup:phpunit" }
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }

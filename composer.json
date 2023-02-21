@@ -7,6 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.0",
+        "drupal/cas_mock_server": "^2.0",
         "drupal/core": "^9.5",
         "drupal/group": "^1.5",
         "guzzlehttp/guzzle": "^6.5"

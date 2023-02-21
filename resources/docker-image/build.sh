@@ -19,6 +19,11 @@ curl https://patch-diff.githubusercontent.com/raw/felixrupp/user_cas/pull/106.di
 echo "Patch: Don't pass NULL to setcookie(,,*)."
 curl https://patch-diff.githubusercontent.com/raw/felixrupp/user_cas/pull/108.diff | patch -p1 -d custom_apps/user_cas
 
+# Patch phpCAS to link to http instead of https.
+# This is needed to make it work with the cas mock server.
+# See https://github.com/felixrupp/user_cas/issues/109
+sed -i "s/\$this->_server\['base_url'\] = 'https:/\$this->_server\['base_url'\] = 'http:/g" custom_apps/user_cas/vendor/jasig/phpcas/source/CAS/Client.php
+
 # Copy the apps back into the source Nextcloud instance.
 # Later, on container startup, all of this is copied to /var/www/html.
 rsync -a /usr/src/nextcloud1/custom_apps/ /usr/src/nextcloud/custom_apps/
