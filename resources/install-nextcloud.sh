@@ -19,30 +19,11 @@ echo '-------------------------------------------------------------------------'
 cd /var/www/html
 if sudo -E -u www-data ./occ status | grep -q 'installed: true'; then
   echo 'Nextcloud is already installed.'
-elif true; then
+else
   # This only happens if something went wrong in the container setup.
-  echo 'Nextcloud should be installed manually:'
-  echo '- Visit http://localhost:8081/'
-  echo '- Enter "admin" / "admin", and click "Install".'
-  echo '- Skip installation of recommended apps.'
-  echo '- Then run this script again.'
+  echo 'Nextcloud installation failed on container startup. Giving up.'
   echo ''
   exit
-else
-  # This is currently disabled, but I am keeping the code for now.
-  echo ''
-  set -e
-  sudo -E -u www-data /var/www/html/occ maintenance:install \
-    --admin-user=admin \
-    --admin-pass=admin \
-    --data-dir=/var/www/html/data \
-    --database=mysql \
-    --database-host=nextcloud_db \
-    --database-port=3306 \
-    --database-name=nextcloud \
-    --database-user=nextcloud \
-    --database-pass=nextpw
-    set +e
 fi
 
 echo ''
