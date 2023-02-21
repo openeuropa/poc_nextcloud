@@ -21,6 +21,7 @@
         "drupal/extra_field": "^2.3",
         "drush/drush": "^11.1",
         "openeuropa/code-review": "^2.0",
+        "openeuropa/oe_authentication": "^1.10",
         "openeuropa/task-runner-drupal-project-symlink": "^1.0-beta6",
         "phpspec/prophecy-phpunit": "^2"
     },
