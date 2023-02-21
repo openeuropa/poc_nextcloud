@@ -33,6 +33,11 @@ echo ''
 cd /var/www/html
 sudo -E -u www-data ./occ app:install richdocuments
 sudo -E -u www-data ./occ app:install groupfolders
+sudo -E -u www-data ./occ app:install -f user_cas
+cd custom_apps/user_cas
+curl https://patch-diff.githubusercontent.com/raw/felixrupp/user_cas/pull/106.diff | patch -p1
+curl https://patch-diff.githubusercontent.com/raw/felixrupp/user_cas/pull/108.diff | patch -p1
+cd ../..
 
 echo ''
 echo '                                                        Set configuration'
