@@ -1,27 +1,24 @@
 FROM nextcloud:25-apache
 
-RUN set -ex; \
-  apt-get update; \
-  apt-get install -y --no-install-recommends \
-    less \
-    nano \
-    sudo \
-    git \
-  ; \
-  pecl install xdebug; \
-  docker-php-ext-enable xdebug;
+# Only copy the specific files needed for the next RUN step,
+# to not have the cache invalidated by changes in other files.
+# Keep copied files in a subdirectory, to not pollute the root directory.
 
-COPY build.sh /
+# Install system packages.
+COPY build.packages.sh /image/
+RUN sh /image/build.packages.sh
 
-RUN set -ex; \
-  sh /build.sh;
+# Download additional apps for Nextcloud.
+COPY build.apps.sh /image/
+RUN sh /image/build.apps.sh
 
-COPY entrypoint.d/ /entrypoint.d/
+# Patch the user_cas Nextcloud app.
+COPY build.patch.sh /image/
+COPY phpCAS.http.patch /image/
+RUN sh /image/build.patch.sh
 
-RUN set -ex; \
-  sed -i 's/exec "$@"//g' /entrypoint.sh; \
-  mv /entrypoint.sh /entrypoint.d/00-nextcloud-install.sh;
-
-COPY entrypoint.sh /
-
-RUN chmod a+x /entrypoint.sh
+# Prepare entrypoint scripts.
+COPY build.entrypoint.sh /image/
+COPY entrypoint.sh /image/
+COPY entrypoint.post-install.sh /image/
+RUN sh /image/build.entrypoint.sh

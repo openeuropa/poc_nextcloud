@@ -48,9 +48,6 @@ services:
     links:
       - nextcloud_db
     volumes:
-      # Insert a custom entrypoint script.
-      # This will run every time the container starts.
-      - ./resources/nextcloud-config.sh:/entrypoint.d/30-nextcloud-config.sh
       # Insert custom php configuration.
       - ./resources/php-custom.ini:/usr/local/etc/php/conf.d/custom.ini
     environment:

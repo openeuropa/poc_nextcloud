@@ -1,5 +1,5 @@
-# These instructions run every time the container is started.
-# At this time, Nextcloud will be already installed.
+# These instructions run every time the container is started,
+# after the entrypoint script from the parent container.
 
 set -x
 
