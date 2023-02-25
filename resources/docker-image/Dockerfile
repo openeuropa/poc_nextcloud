@@ -22,3 +22,6 @@ COPY build.entrypoint.sh /image/
 COPY entrypoint.sh /image/
 COPY entrypoint.post-install.sh /image/
 RUN sh /image/build.entrypoint.sh
+
+COPY build.config.sh /image/
+RUN sh /image/build.config.sh
