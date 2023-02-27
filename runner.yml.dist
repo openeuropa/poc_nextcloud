@@ -67,6 +67,8 @@ commands:
         $config['oe_authentication.settings']['protocol'] = 'eulogin';
         // Use the original validation path, as needed for Nextcloud user_cas.
         $config['oe_authentication.settings']['validation_path'] = 'p3/serviceValidate';
+        // Set a distinguishable title for the mock login form.
+        $config['cas_mock_server.settings']['login_form.title'] = 'EU Login';
 
     - { task: "run", command: "setup:phpunit" }
   setup:phpunit:
