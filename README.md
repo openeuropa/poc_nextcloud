@@ -27,10 +27,12 @@ docker-compose exec web ./vendor/bin/drush uli
 ### Get started
 
 User:
-1. Create a new user account "somebody".
-2. Add the role "Nextcloud user".
-3. Visit the profile.
-  - There should be a link to a Nextcloud user account.
+1. Create a new user account "eliza".
+   (For this username there is already an entry in the EU Login mock server)
+2. Set an email address, e.g. `eliza@example.com`.
+3. Add the role "Nextcloud user".
+4. Visit the profile.
+  - There should be a link to a Nextcloud user profile.
 
 Group:
 1. Create a group 'Example group'.
