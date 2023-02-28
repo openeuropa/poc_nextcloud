@@ -22,3 +22,7 @@ sudo -E -u www-data ./occ config:app:set --value="8080" user_cas cas_server_port
 sudo -E -u www-data ./occ config:app:set --value="/build/cas-mock-server" user_cas cas_server_path
 # Change CAS login button label.
 sudo -E -u www-data ./occ config:app:set --value="EU Login" user_cas cas_login_button_label
+# Force CAS login.
+sudo -E -u www-data ./occ config:app:set --value="1" user_cas cas_force_login
+# Do not auto-create users.
+sudo -E -u www-data ./occ config:app:set --value="0" user_cas cas_autocreate
