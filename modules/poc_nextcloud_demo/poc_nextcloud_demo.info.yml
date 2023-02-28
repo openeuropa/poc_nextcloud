@@ -9,6 +9,7 @@ dependencies:
   - poc_nextcloud:poc_nextcloud_group_folder
 
 config_devel:
+  - block.block.linktonextclouddocuments
   - core.base_field_override.group.group_w_group_folder.label
   - core.entity_form_display.group.group_w_group_folder.default
   - core.entity_form_display.group_content.group_content_type_a92588b2a868d.default
