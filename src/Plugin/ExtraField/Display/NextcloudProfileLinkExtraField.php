@@ -43,7 +43,7 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
    *   Plugin definition.
    * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
    *   Service to get Nextcloud user for Drupal user.
-   * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudLinkBuilder
+   * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudUrlBuilder
    *   Service to build links to Nextcloud.
    */
   public function __construct(
@@ -51,7 +51,7 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
     string $plugin_id,
     array $plugin_definition,
     private NextcloudUserMap $nextcloudUserMap,
-    private NextcloudUrlBuilder $nextcloudLinkBuilder,
+    private NextcloudUrlBuilder $nextcloudUrlBuilder,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -113,8 +113,9 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
     if ($nextcloud_user === NULL) {
       return [];
     }
-    $url = $this->nextcloudLinkBuilder->url('u/' . urlencode($nextcloud_user->getId()));
+    $url = $this->nextcloudUrlBuilder->url('u/' . urlencode($nextcloud_user->getId()));
     return [
+      // @todo Set proper cache info.
       '#cache' => ['max-age' => 0],
       '#type' => 'link',
       '#url' => $url,
