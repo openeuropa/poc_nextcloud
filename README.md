@@ -4,6 +4,12 @@ Proof of concept for an integration of Drupal and Nextcloud.
 
 ## Development setup
 
+Edit `/etc/hosts`, and add this line (It might look different on MacOS):
+
+```
+127.0.1.1       web
+```
+
 Open a terminal, open the project directory, run `docker-compose up`.
 Fade this terminal to the background.
 
