@@ -26,3 +26,4 @@ config_devel:
   - group.role.group_w_group_folder-nx_gf_view
   - group.type.group_w_group_folder
   - user.role.nextcloud_user
+  - views.view.groups
