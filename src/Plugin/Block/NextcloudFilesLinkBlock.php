@@ -5,8 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
 use Drupal\poc_nextcloud\Service\NextcloudUserMap;
 use Drupal\user\UserInterface;
@@ -66,16 +68,25 @@ class NextcloudFilesLinkBlock extends BlockBase implements ContainerFactoryPlugi
     array $configuration,
     $plugin_id,
     $plugin_definition,
-  ): self {
-    return new self(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('current_user'),
-      $container->get('entity_type.manager')->getStorage('user'),
-      $container->get(NextcloudUserMap::class),
-      $container->get(NextcloudUrlBuilder::class),
-    );
+  ): BlockPluginInterface {
+    try {
+      return new self(
+        $configuration,
+        $plugin_id,
+        $plugin_definition,
+        $container->get('current_user'),
+        $container->get('entity_type.manager')->getStorage('user'),
+        $container->get(NextcloudUserMap::class),
+        $container->get(NextcloudUrlBuilder::class),
+      );
+    }
+    catch (ServiceNotAvailableException) {
+      return new EmptyBlock(
+        $configuration,
+        $plugin_id,
+        $plugin_definition,
+      );
+    }
   }
 
   /**
