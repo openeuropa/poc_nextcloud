@@ -2,7 +2,7 @@ drupal:
   root: "build"
   base_url: "http://web:8080/build"
   site:
-    name: "OpenEuropa"
+    name: "Nextcloud POC Demo"
     profile: "minimal"
   database:
     host: "mysql"
