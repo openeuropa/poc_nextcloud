@@ -205,24 +205,33 @@ class ApiConnection implements ApiConnectionInterface {
    * {@inheritdoc}
    */
   public function withFormValues(array $values): static {
-    if ($values === ($this->options[RequestOptions::FORM_PARAMS] ?? [])) {
-      return $this;
-    }
-    $clone = clone $this;
-    $clone->options[RequestOptions::FORM_PARAMS] = $values;
-    return $clone;
+    return $this->withRequestOption(RequestOptions::FORM_PARAMS, $values, []);
   }
 
   /**
    * {@inheritdoc}
    */
   public function withQuery(array $query): static {
-    if ($query === ($this->options[RequestOptions::QUERY] ?? [])) {
+    return $this->withRequestOption(RequestOptions::QUERY, $query, []);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function withRequestOption(string $key, mixed $value, mixed $default = NULL): static {
+    if ($value === ($this->options[$key] ?? $default)) {
       return $this;
     }
     $clone = clone $this;
-    $clone->options[RequestOptions::QUERY] = $query;
+    $clone->options[$key] = $value;
     return $clone;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUserId(): ?string {
+    return $this->options[RequestOptions::AUTH][0] ?? NULL;
   }
 
   /**
@@ -323,7 +332,7 @@ class ApiConnection implements ApiConnectionInterface {
       throw new NextcloudApiException(sprintf(
         'Failed %s request to %s with %s: %s',
         $method,
-        $this->baseUrl . $path,
+        $this->buildUrl($path),
         // Show parameter names, but not values.
         json_encode(array_map(
           static fn () => '*',
@@ -339,7 +348,7 @@ class ApiConnection implements ApiConnectionInterface {
    * {@inheritdoc}
    */
   public function request(string $method, string $path = '', array $params = []): ResponseInterface {
-    $url = $this->baseUrl . $path;
+    $url = $this->buildUrl($path);
     $options = $this->options;
     if ($params) {
       if ($method === 'GET') {
@@ -350,6 +359,24 @@ class ApiConnection implements ApiConnectionInterface {
       }
     }
     return $this->client->request($method, $url, $options);
+  }
+
+  /**
+   * Appends a path to the base url, separated by slash.
+   *
+   * This is needed because the base url may or may not have a trailing slash.
+   *
+   * @param string $path
+   *   Path without leading slash.
+   *
+   * @return string
+   *   Url from base url and path.
+   */
+  private function buildUrl(string $path = ''): string {
+    if ($path === '') {
+      return $this->baseUrl;
+    }
+    return rtrim($this->baseUrl, '/') . '/' . ltrim($path, '/');
   }
 
 }

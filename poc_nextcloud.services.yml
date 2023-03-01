@@ -19,6 +19,7 @@ services:
   Drupal\poc_nextcloud\Endpoint\NxUserEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxWebdavEndpoint: {}
   Drupal\poc_nextcloud\EntityObserver\NextcloudUsers:
     arguments:
       # Explicitly set arguments that cannot be autowired.

@@ -50,6 +50,31 @@ interface ApiConnectionInterface {
   public function withQuery(array $query): static;
 
   /**
+   * Gets a copied instance with added request option.
+   *
+   * @param string $key
+   *   Request option key.
+   * @param string $value
+   *   Request option value.
+   *
+   * @return static
+   *   New instance.
+   */
+  public function withRequestOption(string $key, string $value): static;
+
+  /**
+   * Gets the user id of the API user.
+   *
+   * Some endpoints need this to make user-specific requests.
+   *
+   * @return string|null
+   *   User id, e.g. 'admin', or NULL if not set.
+   *
+   * @todo Rethink if this should really be part of the connection object.
+   */
+  public function getUserId(): ?string;
+
+  /**
    * Makes a request to the API, and gets an OCS response object.
    *
    * @param string $method
