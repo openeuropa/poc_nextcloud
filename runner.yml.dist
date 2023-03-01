@@ -81,6 +81,12 @@ commands:
         // This can be an arbitrary-length random string.
         $config['poc_nextcloud.settings']['storage_encryption_key'] = getenv('NEXTCLOUD_CRYPT_SECRET');
 
+        // Enable full error reporting, for easier development.
+        error_reporting(E_ALL);
+        ini_set('display_errors', TRUE);
+        ini_set('display_startup_errors', TRUE);
+        $config['system.logging']['error_level'] = 'verbose';
+
     - { task: "run", command: "setup:phpunit" }
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }
