@@ -7,6 +7,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8.0",
+        "cweagans/composer-patches": "~1.4",
         "drupal/cas_mock_server": "^2.0",
         "drupal/core": "^9.5",
         "drupal/group": "^1.5",
@@ -60,12 +61,18 @@
             "build/profiles/contrib/{$name}": ["type:drupal-profile"],
             "build/modules/contrib/{$name}": ["type:drupal-module"],
             "build/themes/contrib/{$name}": ["type:drupal-theme"]
+        },
+        "patches": {
+            "drupal/cas_mock_server": {
+                "https://www.drupal.org/project/cas_mock_server/issues/3346608": "https://git.drupalcode.org/issue/cas_mock_server-3346608/-/commit/840432866ea259113e08ebd9915d0f50f8e662c7.patch"
+            }
         }
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
             "composer/installers": true,
+            "cweagans/composer-patches": true,
             "drupal/core-composer-scaffold": true,
             "phpro/grumphp": true,
             "dealerdirect/phpcodesniffer-composer-installer": true
