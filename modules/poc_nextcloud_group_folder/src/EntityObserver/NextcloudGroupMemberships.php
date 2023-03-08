@@ -78,8 +78,13 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
       catch (\Exception) {
         return;
       }
+      $user = $entity->getUser();
+      if (!$user) {
+        // The user was already deleted. Nothing to do.
+        return;
+      }
       $this->updateUserScope(
-        $entity->getUser(),
+        $user,
         $entity,
       );
     }
