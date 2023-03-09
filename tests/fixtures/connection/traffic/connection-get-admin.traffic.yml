@@ -1,0 +1,60 @@
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/admin'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          enabled: true
+          storageLocation: /var/www/html/data/admin
+          id: admin
+          lastLogin: '*** > 999 ***'
+          backend: Database
+          subadmin: {  }
+          quota:
+            free: '*** > 999 ***'
+            used: '*** > 999 ***'
+            total: '*** > 999 ***'
+            relative: 0.01
+            quota: -3
+          avatarScope: v2-federated
+          email: null
+          emailScope: v2-federated
+          additional_mail: {  }
+          additional_mailScope: {  }
+          displayname: admin
+          displaynameScope: v2-federated
+          phone: ''
+          phoneScope: v2-local
+          address: ''
+          addressScope: v2-local
+          website: ''
+          websiteScope: v2-local
+          twitter: ''
+          twitterScope: v2-local
+          organisation: ''
+          organisationScope: v2-local
+          role: ''
+          roleScope: v2-local
+          headline: ''
+          headlineScope: v2-local
+          biography: ''
+          biographyScope: v2-local
+          profile_enabled: '1'
+          profile_enabledScope: v2-local
+          groups:
+            - admin
+          language: en
+          locale: ''
+          notify_email: null
+          backendCapabilities:
+            setDisplayName: true
+            setPassword: true

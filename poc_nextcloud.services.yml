@@ -1,0 +1,35 @@
+services:
+  _defaults:
+    autowire: true
+  logger.channel.poc_nextcloud:
+    parent: logger.channel_base
+    arguments: ['poc_nextcloud']
+  # Services that depend on the nextcloud connection will cause exception if
+  # Nextcloud is not configured.
+  Drupal\poc_nextcloud\Connection\ApiConnectionInterface:
+    factory: [Drupal\poc_nextcloud\Connection\ApiConnection, 'fromConfig']
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@state'
+  Drupal\poc_nextcloud\Service\NextcloudUserMap: {}
+  Drupal\poc_nextcloud\Service\NextcloudUrlBuilder:
+    factory: [~, create]
+    arguments: ['@config.factory']
+  Drupal\poc_nextcloud\Endpoint\NxUserEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint: {}
+  Drupal\poc_nextcloud\Endpoint\NxWebdavEndpoint: {}
+  Drupal\poc_nextcloud\EntityObserver\NextcloudUsers:
+    arguments:
+      # Explicitly set arguments that cannot be autowired.
+      # See https://www.drupal.org/project/drupal/issues/3336739
+      Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
+  poc_nextcloud.entity_observer:
+    class: Drupal\poc_nextcloud\EntityObserver\Multicast
+    factory: [~, fromServiceIdsWithEmptyFallback]
+    arguments:
+      - '@service_container'
+      - '@logger.channel.poc_nextcloud'
+      -
+        - Drupal\poc_nextcloud\EntityObserver\NextcloudUsers

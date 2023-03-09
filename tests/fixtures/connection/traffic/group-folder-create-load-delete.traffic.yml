@@ -1,0 +1,87 @@
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/apps/groupfolders/folders'
+    form_params:
+      mountpoint: example
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: 100001
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/apps/groupfolders/folders/100001'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: 100001
+          mount_point: example
+          groups: {  }
+          quota: '-3'
+          size: 0
+          acl: false
+          manage: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/apps/groupfolders/folders/100001'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          success: true
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/apps/groupfolders/folders/100001'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: false
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/apps/groupfolders/folders/100001'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          success: true

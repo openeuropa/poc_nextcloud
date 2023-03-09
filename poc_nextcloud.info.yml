@@ -4,3 +4,7 @@ package: OpenEuropa
 
 core_version_requirement: ^9.5
 type: module
+
+dependencies:
+  # @todo Split group functionality into a submodule.
+  - group:group

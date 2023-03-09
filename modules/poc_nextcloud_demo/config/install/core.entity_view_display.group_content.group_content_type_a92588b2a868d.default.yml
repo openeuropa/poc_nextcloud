@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group_content.group_content_type_a92588b2a868d.group_roles
+    - group.content_type.group_content_type_a92588b2a868d
+id: group_content.group_content_type_a92588b2a868d.default
+targetEntityType: group_content
+bundle: group_content_type_a92588b2a868d
+mode: default
+content:
+  entity_id:
+    type: entity_reference_entity_view
+    label: above
+    settings:
+      view_mode: compact
+      link: false
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  group_roles:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  uid: true

@@ -1,0 +1,122 @@
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: failure
+          statuscode: 404
+          message: 'User does not exist'
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+    form_params:
+      email: Aurelie@example.com
+      userid: Aurelie
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: Aurelie
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          enabled: true
+          storageLocation: /var/www/html/data/Aurelie
+          id: Aurelie
+          lastLogin: 0
+          backend: Database
+          subadmin: {  }
+          quota:
+            quota: none
+            used: 0
+          email: aurelie@example.com
+          additional_mail: {  }
+          displayname: Aurelie
+          phone: ''
+          address: ''
+          website: ''
+          twitter: ''
+          organisation: ''
+          role: ''
+          headline: ''
+          biography: ''
+          profile_enabled: '1'
+          groups: {  }
+          language: en
+          locale: ''
+          notify_email: null
+          backendCapabilities:
+            setDisplayName: true
+            setPassword: true
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: failure
+          statuscode: 404
+          message: 'User does not exist'
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: failure
+          statuscode: 998
+          message: ''
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }

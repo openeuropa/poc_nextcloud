@@ -1,0 +1,156 @@
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          users:
+            - admin
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+    form_params:
+      email: Fabio@example.com
+      userid: Fabio
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: Fabio
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+    form_params:
+      email: Mercedes@example.com
+      userid: Mercedes
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: Mercedes
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+    form_params:
+      email: Bianca@example.com
+      userid: Bianca
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: Bianca
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          users:
+            - admin
+            - Bianca
+            - Fabio
+            - Mercedes
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Fabio'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Mercedes'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Bianca'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          users:
+            - admin

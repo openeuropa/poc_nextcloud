@@ -1,0 +1,13 @@
+diff --git source/CAS/Client.php source/CAS/Client.php
+index 1a40f63..5b2ae9d 100644
+--- source/CAS/Client.php
++++ source/CAS/Client.php
+@@ -336,7 +336,7 @@ private function _getServerBaseURL()
+     {
+         // the URL is build only when needed
+         if ( empty($this->_server['base_url']) ) {
+-            $this->_server['base_url'] = 'https://' . $this->_getServerHostname();
++            $this->_server['base_url'] = 'http://' . $this->_getServerHostname();
+             if ($this->_getServerPort()!=443) {
+                 $this->_server['base_url'] .= ':'
+                 .$this->_getServerPort();

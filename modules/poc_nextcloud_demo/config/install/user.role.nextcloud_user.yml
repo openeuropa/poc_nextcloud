@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - poc_nextcloud
+id: nextcloud_user
+label: 'Nextcloud user'
+weight: 2
+is_admin: null
+permissions:
+  - 'have nextcloud account'

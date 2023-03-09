@@ -1,0 +1,7 @@
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/non-existing-path'
+  response:
+    status: 200
+    data: null

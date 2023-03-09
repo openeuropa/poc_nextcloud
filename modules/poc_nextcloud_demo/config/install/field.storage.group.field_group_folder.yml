@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - group
+    - poc_nextcloud_group_folder
+id: group.field_group_folder
+field_name: field_group_folder
+entity_type: group
+type: poc_nextcloud_group_folder
+settings: {  }
+module: poc_nextcloud_group_folder
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

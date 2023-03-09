@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - poc_nextcloud
+  theme:
+    - olivero
+id: linktonextclouddocuments
+theme: olivero
+region: sidebar
+weight: 0
+provider: null
+plugin: poc_nextcloud_files_link
+settings:
+  id: poc_nextcloud_files_link
+  label: 'Link to Nextcloud documents'
+  label_display: '0'
+  provider: poc_nextcloud
+visibility: {  }

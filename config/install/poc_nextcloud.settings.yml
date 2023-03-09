@@ -1,0 +1,4 @@
+# Start with empty-ish settings by default.
+# This is needed to be able to set the config values with drush config:set.
+# See https://github.com/drush-ops/drush/issues/3793.
+nextcloud_url: ''

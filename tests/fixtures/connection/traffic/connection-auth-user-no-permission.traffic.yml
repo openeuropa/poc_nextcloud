@@ -1,0 +1,49 @@
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+    form_params:
+      userid: testuser
+      password: tes012fe552r008pw
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: testuser
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: failure
+          statuscode: 403
+          message: 'Logged in user must be at least a sub admin'
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/testuser'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }

@@ -1,0 +1,29 @@
+name: POC Nextcloud Demo
+type: module
+description: Demo configuration for POC Nextcloud.
+package: OpenEuropa
+core_version_requirement: ^9.5
+
+dependencies:
+  - poc_nextcloud:poc_nextcloud
+  - poc_nextcloud:poc_nextcloud_group_folder
+
+config_devel:
+  - block.block.linktonextclouddocuments
+  - core.base_field_override.group.group_w_group_folder.label
+  - core.entity_form_display.group.group_w_group_folder.default
+  - core.entity_form_display.group_content.group_content_type_a92588b2a868d.default
+  - core.entity_view_display.group.group_w_group_folder.default
+  - core.entity_view_display.group_content.group_content_type_a92588b2a868d.default
+  - core.entity_view_display.user.user.full
+  - field.field.group.group_w_group_folder.field_group_folder
+  - field.field.group_content.group_content_type_a92588b2a868d.group_roles
+  - field.storage.group.field_group_folder
+  - group.content_type.group_content_type_a92588b2a868d
+  - group.role.group_w_group_folder-nx_gf_edit
+  - group.role.group_w_group_folder-nx_gf_manag
+  - group.role.group_w_group_folder-nx_gf_share
+  - group.role.group_w_group_folder-nx_gf_view
+  - group.type.group_w_group_folder
+  - user.role.nextcloud_user
+  - views.view.groups
