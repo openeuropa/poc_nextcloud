@@ -7,7 +7,7 @@ namespace Drupal\poc_nextcloud\Connection;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\State\StateInterface;
-use Drupal\poc_nextcloud\CookieJar\ValueStoreCookieJar;
+use Drupal\poc_nextcloud\CookieJar\PersistentCookieJar;
 use Drupal\poc_nextcloud\Crypt\OpenSSLCryptor;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\Exception\ResponseInvalidJsonException;
@@ -126,7 +126,7 @@ class ApiConnection implements ApiConnectionInterface {
     $cryptor = new OpenSSLCryptor($crypt_secret);
     $cookie_store = new StateValueStore($state, 'poc_nextcloud.connection_cookies');
     $cookie_store = new CryptValueStore($cookie_store, $cryptor);
-    return new ValueStoreCookieJar(
+    return new PersistentCookieJar(
       $cookie_store,
       TRUE,
       TRUE,

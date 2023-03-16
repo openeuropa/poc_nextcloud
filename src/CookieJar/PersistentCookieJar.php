@@ -2,31 +2,33 @@
 
 namespace Drupal\poc_nextcloud\CookieJar;
 
+use Drupal\poc_nextcloud\ValueStore\ValueStoreInterface;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Cookie\SetCookie;
 
 /**
- * Base class for cookie jar with persistence.
- *
- * Some of the private methods might become public in future versions.
+ * Persists cookies into a value store object.
  *
  * @see \GuzzleHttp\Cookie\FileCookieJar
  */
-abstract class PersistentCookieJarBase extends CookieJar {
+class PersistentCookieJar extends CookieJar {
 
   /**
    * Constructor.
    *
    * This cookie jar always starts empty, it must be initialized first.
    *
+   * @param \Drupal\poc_nextcloud\ValueStore\ValueStoreInterface $valueStore
+   *   Storage for a single value.
    * @param bool $storeSessionCookies
    *   Whether to store session cookies.
    * @param bool $strictMode
    *   TRUE to throw exceptions when invalid cookies are added.
    */
   public function __construct(
+    private ValueStoreInterface $valueStore,
     private bool $storeSessionCookies = TRUE,
-    bool $strictMode = TRUE,
+    bool $strictMode = FALSE,
   ) {
     parent::__construct($strictMode);
     $this->load();
@@ -43,7 +45,8 @@ abstract class PersistentCookieJarBase extends CookieJar {
    * Loads cookies from storage into the jar.
    */
   private function load(): void {
-    $data = $this->loadData();
+    // @todo Catch and log.
+    $data = $this->valueStore->get() ?? [];
     $this->import($data);
   }
 
@@ -52,7 +55,8 @@ abstract class PersistentCookieJarBase extends CookieJar {
    */
   private function save(): void {
     $data = $this->export();
-    $this->saveData($data);
+    // @todo Catch and log.
+    $this->valueStore->set($data);
   }
 
   /**
@@ -83,21 +87,5 @@ abstract class PersistentCookieJarBase extends CookieJar {
     }
     return $data;
   }
-
-  /**
-   * Loads cookie data from storage.
-   *
-   * @return array
-   *   Cookie data.
-   */
-  abstract protected function loadData(): array;
-
-  /**
-   * Writes cookie data to storage.
-   *
-   * @param array $data
-   *   Cookie data.
-   */
-  abstract protected function saveData(array $data): void;
 
 }
