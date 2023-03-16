@@ -9,7 +9,7 @@ use Drupal\poc_nextcloud\Crypt\CryptorInterface;
 /**
  * Decorator using encryption.
  */
-class CryptValueStore implements ValueStoreInterface {
+final class CryptValueStore implements ValueStoreInterface {
 
   /**
    * Constructor.

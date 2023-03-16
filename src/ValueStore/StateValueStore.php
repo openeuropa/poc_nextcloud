@@ -9,7 +9,7 @@ use Drupal\Core\State\StateInterface;
 /**
  * Single-value store that uses the state system.
  */
-class StateValueStore implements ValueStoreInterface {
+final class StateValueStore implements ValueStoreInterface {
 
   /**
    * Constructor.
