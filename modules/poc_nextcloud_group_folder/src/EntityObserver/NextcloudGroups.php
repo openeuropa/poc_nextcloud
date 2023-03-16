@@ -8,11 +8,9 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\group\Entity\GroupInterface;
 use Drupal\group\Entity\GroupRoleInterface;
 use Drupal\group\Entity\GroupTypeInterface;
-use Drupal\poc_nextcloud\DataUtil;
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
 use Drupal\poc_nextcloud\EntityObserver\EntityObserverInterface;
 use Drupal\poc_nextcloud\WritableImage\GroupsInNamespaceImage;
-use Drupal\poc_nextcloud_group_folder\GroupFolderConstants;
 use Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader;
 use Drupal\poc_nextcloud_group_folder\Service\GroupRoleToGroupId;
 
@@ -205,31 +203,7 @@ class NextcloudGroups implements EntityObserverInterface {
    *   Display name.
    */
   private function buildGroupLabel(GroupInterface $drupal_group, GroupRoleInterface $role): string {
-    $role_bitmask = $this->buildGroupPerms($role);
-    // @todo Come up with a nicer naming pattern.
-    $perm_string = implode('', array_filter(
-      GroupFolderConstants::PERMISSIONS_SHORTCODE_MAP,
-      static fn (int $perm_bitmask) => $perm_bitmask & $role_bitmask,
-      ARRAY_FILTER_USE_KEY,
-    ));
-    return 'D:G:' . $drupal_group->id() . ':' . $perm_string . ': ' . $drupal_group->label() . ': ' . $role->label();
-  }
-
-  /**
-   * Builds a permissions bitmask for a group.
-   *
-   * @param \Drupal\group\Entity\GroupRoleInterface $role
-   *   The role that the group was created for.
-   *
-   * @return int
-   *   Bitmask to define permissions of the group on its group folder.
-   */
-  private function buildGroupPerms(GroupRoleInterface $role): int {
-    $role_permissions_by_bitmask = array_intersect(
-      GroupFolderConstants::PERMISSIONS_MAP,
-      $role->getPermissions(),
-    );
-    return DataUtil::bitwiseOr(...array_keys($role_permissions_by_bitmask));
+    return $drupal_group->label() . ': ' . $role->label();
   }
 
 }
