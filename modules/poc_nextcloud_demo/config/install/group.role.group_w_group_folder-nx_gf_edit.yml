@@ -4,7 +4,7 @@ dependencies:
   config:
     - group.type.group_w_group_folder
 id: group_w_group_folder-nx_gf_edit
-label: 'Edit Nextcloud group folder content'
+label: 'Edit documents'
 weight: 7
 internal: false
 audience: member

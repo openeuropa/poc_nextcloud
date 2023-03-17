@@ -4,7 +4,7 @@ dependencies:
   config:
     - group.type.group_w_group_folder
 id: group_w_group_folder-nx_gf_manag
-label: 'Manage ACL for Nextcloud group folder content'
+label: 'Manage per-document access'
 weight: 6
 internal: false
 audience: member

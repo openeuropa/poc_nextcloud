@@ -4,7 +4,7 @@ dependencies:
   config:
     - group.type.group_w_group_folder
 id: group_w_group_folder-nx_gf_share
-label: 'Share Nextcloud group folder content'
+label: 'Share documents'
 weight: 5
 internal: false
 audience: member
