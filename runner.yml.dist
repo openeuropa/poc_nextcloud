@@ -37,6 +37,7 @@ drupal:
     - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_pass admin -y"
     - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_url http://nextcloud/ -y"
     - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_web_url http://localhost:8081/ -y"
+    - "./vendor/bin/drush config-set poc_nextcloud.settings storage_encryption_key W76apvVvJ8yVxt2oA3FLPgZK65rRLLZ5QA6MgsxZqLmeSXVQ -y"
     # Override default front page "/user/login", to prevent redirect loop with EU Login.
     - "./vendor/bin/drush config-set system.site page.front /groups -y"
     - "./vendor/bin/drush cr"
