@@ -42,24 +42,26 @@ class OpenSSLCryptor implements CryptorInterface {
       $this->secret,
       0,
       $iv,
+      $tag,
     );
     if ($encrypted_value === FALSE) {
       throw new ValueException('Failed to encrypt value.');
     }
-    return [$encrypted_value, $iv];
+    return [$encrypted_value, $iv, $tag];
   }
 
   /**
    * {@inheritdoc}
    */
   public function decrypt(string|array $encrypted_record): string {
-    [$encrypted_record, $iv] = $encrypted_record;
+    [$encrypted_record, $iv, $tag] = $encrypted_record;
     $value = openssl_decrypt(
       $encrypted_record,
       $this->cipherAlgo,
       $this->secret,
       0,
       $iv,
+      $tag,
     );
     if ($value === FALSE) {
       throw new ValueException('Failed to decrypt value.');
