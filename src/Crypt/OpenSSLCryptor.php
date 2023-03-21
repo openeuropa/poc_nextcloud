@@ -36,14 +36,20 @@ class OpenSSLCryptor implements CryptorInterface {
     catch (\Exception $e) {
       throw new ValueException($e->getMessage(), 0, $e);
     }
-    $encrypted_value = openssl_encrypt(
-      $value,
-      $this->cipherAlgo,
-      $this->secret,
-      0,
-      $iv,
-      $tag,
-    );
+    set_error_handler($this->getExceptionErrorHandler());
+    try {
+      $encrypted_value = openssl_encrypt(
+        $value,
+        $this->cipherAlgo,
+        $this->secret,
+        0,
+        $iv,
+        $tag,
+      );
+    }
+    finally {
+      restore_error_handler();
+    }
     if ($encrypted_value === FALSE) {
       throw new ValueException('Failed to encrypt value.');
     }
@@ -55,18 +61,43 @@ class OpenSSLCryptor implements CryptorInterface {
    */
   public function decrypt(string|array $encrypted_record): string {
     [$encrypted_record, $iv, $tag] = $encrypted_record;
-    $value = openssl_decrypt(
-      $encrypted_record,
-      $this->cipherAlgo,
-      $this->secret,
-      0,
-      $iv,
-      $tag,
-    );
+    set_error_handler($this->getExceptionErrorHandler());
+    try {
+      $value = openssl_decrypt(
+        $encrypted_record,
+        $this->cipherAlgo,
+        $this->secret,
+        0,
+        $iv,
+        $tag,
+      );
+    }
+    finally {
+      restore_error_handler();
+    }
     if ($value === FALSE) {
       throw new ValueException('Failed to decrypt value.');
     }
     return $value;
+  }
+
+  /**
+   * Gets an error handler callback that throws exceptions.
+   *
+   * @return callable
+   *   Error handler callback.
+   */
+  private function getExceptionErrorHandler(): callable {
+    return function (
+      int $errno,
+      string $errstr,
+    ) {
+      throw new ValueException(sprintf(
+        'Failed to encrypt value: [%s] %s',
+        $errno,
+        $errstr,
+      ));
+    };
   }
 
 }
