@@ -29,6 +29,9 @@ final class CryptValueStore implements ValueStoreInterface {
    */
   public function get(): mixed {
     $stored_record = $this->decorated->get();
+    if ($stored_record === NULL) {
+      return NULL;
+    }
     $serialized_value = $this->crypt->decrypt($stored_record);
     return unserialize($serialized_value);
   }
@@ -37,6 +40,10 @@ final class CryptValueStore implements ValueStoreInterface {
    * {@inheritdoc}
    */
   public function set(mixed $value): void {
+    if ($value === NULL) {
+      $this->decorated->set(NULL);
+      return;
+    }
     $serialized_value = serialize($value);
     $record = $this->crypt->encrypt($serialized_value);
     $this->decorated->set($record);
