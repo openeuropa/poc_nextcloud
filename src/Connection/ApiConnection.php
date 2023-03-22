@@ -280,6 +280,48 @@ class ApiConnection implements ApiConnectionInterface {
    * {@inheritdoc}
    */
   public function requestOcs(string $method, string $path = '', array $params = []): OcsResponse {
+    $response = $this->doRequestOcs($method, $path, $params);
+    // Detect responses that require password confirmation.
+    // This happens with cookie auth and token auth, if the route method in
+    // Nextcloud is annotated with `@PasswordConfirmationRequired`, and the
+    // last basic auth login is more than 30 minutes ago.
+    // @todo Watch if Nextcloud comes up with a more reliable way to detect
+    //   responses which require password confirmation.
+    // See https://github.com/nextcloud/server/issues/37377.
+    if ($response->isFailure()
+      && $response->getStatusCode() === 403
+      && $response->getMessage() === 'Password confirmation is required'
+      && isset($this->options['cookies'])
+    ) {
+      // Nextcloud wants password confirmation.
+      // Try again, but with a new session.
+      $this->options['cookies']->clearSessionCookies();
+      $response = $this->doRequestOcs($method, $path, $params);
+    }
+    return $response;
+  }
+
+  /**
+   * Makes a request to the API, and gets an OCS response object.
+   *
+   * This is the same as ->requestOcs(), but without the password confirm check.
+   *
+   * @param string $method
+   *   One of 'GET', 'POST', 'PUT', 'DELETE' etc.
+   * @param string $path
+   *   Path relative to the API base url.
+   *   E.g. 'ocs/v1.php/cloud/users' to create a Nextcloud user.
+   * @param array $params
+   *   Query string parameters for GET, or form values for POST.
+   *
+   * @return \Drupal\poc_nextcloud\Response\OcsResponse
+   *   OCS response object.
+   *
+   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   *   Request failed, or the response does not have the structore of an OCS
+   *   response object.
+   */
+  private function doRequestOcs(string $method, string $path = '', array $params = []): OcsResponse {
     $data = $this->requestJson($method, $path, $params);
     return OcsResponse::fromResponseData($data);
   }
