@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\WritableImage;
 
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
+use Drupal\poc_nextcloud\NxEntity\NxGroup;
 
 /**
  * Writable image to create groups in a namespace.
@@ -54,8 +55,12 @@ class GroupsInNamespaceImage {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
   public function write(): void {
-    $existing_ids = $this->groupEndpoint->loadIds();
-    $existing_ids = preg_grep($this->groupIdRegex, $existing_ids);
+    $all_existing_groups = $this->groupEndpoint->loadGroups();
+    $all_existing_ids = array_map(
+      fn (NxGroup $group) => $group->getId(),
+      $all_existing_groups,
+    );
+    $existing_ids = preg_grep($this->groupIdRegex, $all_existing_ids);
     $expected_ids = array_keys($this->groupDisplayNames);
 
     $group_ids_to_delete = array_diff($existing_ids, $expected_ids);
@@ -68,9 +73,13 @@ class GroupsInNamespaceImage {
       $this->groupEndpoint->insert($group_id, $this->groupDisplayNames[$group_id]);
     }
 
-    // Update the already-existing groups.
-    foreach (array_intersect($expected_ids, $existing_ids) as $group_id) {
-      $this->groupEndpoint->setDisplayName($group_id, $this->groupDisplayNames[$group_id]);
+    // Update group display names if they have changed.
+    foreach (array_intersect($existing_ids, $expected_ids) as $i => $group_id) {
+      $new_label = $this->groupDisplayNames[$group_id];
+      if ($new_label === $all_existing_groups[$i]->getDisplayName()) {
+        continue;
+      }
+      $this->groupEndpoint->setDisplayName($group_id, $new_label);
     }
   }
 
