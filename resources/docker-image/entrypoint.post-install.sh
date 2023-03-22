@@ -1,6 +1,12 @@
 # These instructions run every time the container is started,
 # after the entrypoint script from the parent container.
 
+if [ -e "$0.done" ]; then
+  # The script has already run and does not need to run again.
+  echo "already done: $0"
+  exit
+fi
+
 set -x
 
 cd /var/www/html
@@ -26,3 +32,6 @@ sudo -E -u www-data ./occ config:app:set --value="EU Login" user_cas cas_login_b
 sudo -E -u www-data ./occ config:app:set --value="1" user_cas cas_force_login
 # Do not auto-create users.
 sudo -E -u www-data ./occ config:app:set --value="0" user_cas cas_autocreate
+
+# Prevent the script from running again on next startup.
+touch "$0.done"
