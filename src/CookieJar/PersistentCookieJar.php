@@ -5,6 +5,8 @@ namespace Drupal\poc_nextcloud\CookieJar;
 use Drupal\poc_nextcloud\ValueStore\ValueStoreInterface;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Cookie\SetCookie;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Persists cookies into a value store object.
@@ -12,6 +14,13 @@ use GuzzleHttp\Cookie\SetCookie;
  * @see \GuzzleHttp\Cookie\FileCookieJar
  */
 class PersistentCookieJar extends CookieJar {
+
+  /**
+   * Data to compare if cookies have changed.
+   *
+   * @var array|null
+   */
+  private ?array $data = NULL;
 
   /**
    * Constructor.
@@ -35,10 +44,11 @@ class PersistentCookieJar extends CookieJar {
   }
 
   /**
-   * Destructor.
+   * {@inheritdoc}
    */
-  public function __destruct() {
-    $this->save();
+  public function extractCookies(RequestInterface $request, ResponseInterface $response) {
+    parent::extractCookies($request, $response);
+    $this->saveIfChanged();
   }
 
   /**
@@ -47,16 +57,21 @@ class PersistentCookieJar extends CookieJar {
   private function load(): void {
     // @todo Catch and log.
     $data = $this->valueStore->get() ?? [];
+    $this->data = $data;
     $this->import($data);
   }
 
   /**
-   * Saves cookies from the jar into storage.
+   * Saves cookies from the jar into storage, if they have changed.
    */
-  private function save(): void {
+  private function saveIfChanged(): void {
     $data = $this->export();
+    if ($data === $this->data) {
+      return;
+    }
     // @todo Catch and log.
     $this->valueStore->set($data);
+    $this->data = $data;
   }
 
   /**
