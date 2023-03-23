@@ -107,7 +107,7 @@ interface ApiConnectionInterface {
    * @param array $params
    *   Query string parameters for GET, or form values for POST.
    *
-   * @return \Drupal\poc_nextcloud\Response\OcsResponse
+   * @return mixed
    *   Response data (parsed json).
    *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
