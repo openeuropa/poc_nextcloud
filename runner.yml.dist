@@ -32,12 +32,6 @@ drupal:
     - "./vendor/bin/drush casms-uc alfonso --email=alfonso@example.com --password=alfonsopw"
     - "./vendor/bin/drush casms-uc eliza --email=eliza@example.com --password=elizapw"
     - "./vendor/bin/drush casms-uc pawel --email=pawel@example.com --password=pawelpw"
-    # Configure Nextcloud connection.
-    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_user admin -y"
-    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_pass admin -y"
-    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_url http://nextcloud/ -y"
-    - "./vendor/bin/drush config-set poc_nextcloud.settings nextcloud_web_url http://localhost:8081/ -y"
-    - "./vendor/bin/drush config-set poc_nextcloud.settings storage_encryption_key W76apvVvJ8yVxt2oA3FLPgZK65rRLLZ5QA6MgsxZqLmeSXVQ -y"
     # Override default front page "/user/login", to prevent redirect loop with EU Login.
     - "./vendor/bin/drush config-set system.site page.front /groups -y"
     - "./vendor/bin/drush cr"
@@ -72,6 +66,20 @@ commands:
         $config['cas_mock_server.settings']['login_form.title'] = 'EU Login';
         // Username does not work, it has to be the email address.
         $config['cas_mock_server.settings']['login_form']['email'] = 'E-mail address';
+
+        // Configuration overrides for 'poc_nextcloud' module.
+        // Credentials of the API user.
+        // This can be 'admin', but it is recommended to created a dedicated user.
+        $config['poc_nextcloud.settings']['nextcloud_user'] = getenv('NEXTCLOUD_API_USER');
+        $config['poc_nextcloud.settings']['nextcloud_pass'] = getenv('NEXTCLOUD_API_PASS');
+        // Nextcloud URL for server-side API requests.
+        $config['poc_nextcloud.settings']['nextcloud_url'] = getenv('NEXTCLOUD_API_URL');
+        // Nextcloud URL for client-side links and redirects.
+        // In some scenarios this could be different from the server-side url.
+        $config['poc_nextcloud.settings']['nextcloud_web_url'] = getenv('NEXTCLOUD_WEB_URL');
+        // Encryption key to encrypt authorization cookies or tokens.
+        // This can be an arbitrary-length random string.
+        $config['poc_nextcloud.settings']['storage_encryption_key'] = getenv('NEXTCLOUD_CRYPT_SECRET');
 
     - { task: "run", command: "setup:phpunit" }
   setup:phpunit:

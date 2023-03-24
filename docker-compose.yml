@@ -16,6 +16,11 @@ services:
       PHP_IDE_CONFIG: "serverName=Docker"
       # Enable step debugging for all PHP request. See ./README.md#step-debugging for more information.
       # XDEBUG_SESSION: 1
+      NEXTCLOUD_API_USER: Drupal module
+      NEXTCLOUD_API_PASS: drupalmodulepw
+      NEXTCLOUD_API_URL: http://nextcloud/
+      NEXTCLOUD_WEB_URL: http://localhost:8081/
+      NEXTCLOUD_CRYPT_SECRET: W76apvVvJ8yVxt2oA3FLPgZK65rRLLZ5QA6MgsxZqLmeSXVQ
 
   mysql:
     image: percona/percona-server:5.7
