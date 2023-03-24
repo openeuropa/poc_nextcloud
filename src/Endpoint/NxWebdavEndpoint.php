@@ -90,7 +90,7 @@ class NxWebdavEndpoint {
     if ($user_id === NULL) {
       throw new NextcloudApiException('Cannot build a path without a user id.');
     }
-    return $this->connection->withPath($prefix . '/' . urlencode($user_id));
+    return $this->connection->withPath($prefix . '/' . rawurlencode($user_id));
   }
 
 }

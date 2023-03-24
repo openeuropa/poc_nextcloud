@@ -393,7 +393,7 @@ class NxGroupFolderEndpoint {
    *   New connection instance.
    */
   private function folderGroupPath(int $group_folder_id, string $group_id): ApiConnectionInterface {
-    return $this->folderPath($group_folder_id, '/groups/' . urlencode($group_id));
+    return $this->folderPath($group_folder_id, '/groups/' . rawurlencode($group_id));
   }
 
   /**
