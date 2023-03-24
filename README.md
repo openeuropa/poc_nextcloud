@@ -1,6 +1,14 @@
 # poc_nextcloud
-Proof of concept for an integration of Drupal and Nextcloud.
 
+_This module is in "Proof of concept" state. Do not use on a production site._
+
+Module to remote-control users and group folders in Nextcloud from Drupal.
+See [doc/behavior.md](doc/behavior.md) for details on how this module works.
+
+
+## Usage in an existing website
+
+See [doc/install.md](doc/install.md).
 
 ## Development setup
 
