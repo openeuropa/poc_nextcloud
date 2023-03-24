@@ -426,8 +426,7 @@ class NxUserEndpoint {
    *   Connection object with adjusted url.
    */
   private function userPath(string $user_id, string $path = ''): ApiConnectionInterface {
-    // @todo Is urlencode() sufficient and necessary?
-    return $this->connection->withPath(urlencode($user_id) . $path);
+    return $this->connection->withPath(rawurlencode($user_id) . $path);
   }
 
 }

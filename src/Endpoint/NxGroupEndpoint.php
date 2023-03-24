@@ -247,7 +247,7 @@ class NxGroupEndpoint {
    */
   private function groupPath(string $group_id): ApiConnectionInterface {
     return $this->connection
-      ->withPath(urlencode($group_id));
+      ->withPath(rawurlencode($group_id));
   }
 
 }
