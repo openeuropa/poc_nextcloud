@@ -344,7 +344,26 @@ class ApiConnection implements ApiConnectionInterface {
    *   Request failed.
    */
   private function requestJson(string $method, string $path = '', array $params = []): array {
-    $body = $this->requestBody($method, $path, $params);
+    try {
+      $response = $this->request($method, $path, $params);
+    }
+    catch (GuzzleException $e) {
+      // @todo Consider to not wrap the GuzzleException.
+      //   This would make the throws contract more verbose, but it would allow
+      //   more targeted catch statements later.
+      throw new NextcloudApiException(sprintf(
+        'Failed %s request to %s with %s: %s',
+        $method,
+        $this->buildUrl($path),
+        // Show parameter names, but not values.
+        json_encode(array_map(
+          static fn() => '*',
+          $params,
+        )),
+        $e->getMessage(),
+      ), 0, $e);
+    }
+    $body = (string) $response->getBody();
     try {
       $data = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
     }
@@ -357,47 +376,6 @@ class ApiConnection implements ApiConnectionInterface {
       ), 0, $e);
     }
     return $data;
-  }
-
-  /**
-   * Makes a requests and gets the response body.
-   *
-   * This also catches and wraps the guzzle exception.
-   *
-   * @param string $method
-   *   Method, e.g. 'POST'.
-   * @param string $path
-   *   Path.
-   * @param array $params
-   *   Query string parameters for GET, or form values for POST.
-   *
-   * @return string
-   *   Response body.
-   *
-   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
-   *
-   * @todo Consider to not wrap the GuzzleException.
-   *   This would make the throws contract more verbose, but it would allow more
-   *   targeted catch statements later.
-   */
-  protected function requestBody(string $method, string $path = '', array $params = []): string {
-    try {
-      $response = $this->request($method, $path, $params);
-    }
-    catch (GuzzleException $e) {
-      throw new NextcloudApiException(sprintf(
-        'Failed %s request to %s with %s: %s',
-        $method,
-        $this->buildUrl($path),
-        // Show parameter names, but not values.
-        json_encode(array_map(
-          static fn () => '*',
-          $params,
-        )),
-        $e->getMessage(),
-      ), 0, $e);
-    }
-    return (string) $response->getBody();
   }
 
   /**
