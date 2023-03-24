@@ -10,15 +10,11 @@ targetEntityType: user
 bundle: user
 mode: full
 content:
-  extra_field_poc_nextcloud_account_info:
-    settings: {  }
-    third_party_settings: {  }
-    weight: 1
-    region: content
   extra_field_poc_nextcloud_account_link:
     settings: {  }
     third_party_settings: {  }
     weight: 0
     region: content
 hidden:
+  extra_field_poc_nextcloud_account_info: true
   member_for: true
