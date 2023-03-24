@@ -12,7 +12,7 @@ bundle: group_w_group_folder
 mode: default
 content:
   field_group_folder:
-    type: poc_nextcloud_group_folder_info
+    type: poc_nextcloud_group_folder_link
     label: above
     settings: {  }
     third_party_settings: {  }
