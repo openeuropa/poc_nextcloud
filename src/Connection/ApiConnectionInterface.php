@@ -97,25 +97,6 @@ interface ApiConnectionInterface {
   public function requestOcs(string $method, string $path = '', array $params = []): OcsResponse;
 
   /**
-   * Makes a request to the API, and gets parsed json data.
-   *
-   * @param string $method
-   *   One of 'GET', 'POST', 'PUT', 'DELETE' etc.
-   * @param string $path
-   *   Path relative to the API base url.
-   *   E.g. 'ocs/v1.php/cloud/users' to create a Nextcloud user.
-   * @param array $params
-   *   Query string parameters for GET, or form values for POST.
-   *
-   * @return mixed
-   *   Response data (parsed json).
-   *
-   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
-   *   Request failed.
-   */
-  public function requestJson(string $method, string $path = '', array $params = []): mixed;
-
-  /**
    * Makes a request to the API, and gets a http response object.
    *
    * This is for requests that expect a random array.
