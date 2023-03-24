@@ -86,14 +86,18 @@ class NextcloudGroupFolderReadme implements EntityObserverInterface {
     if (!$group_folder) {
       return;
     }
-    $cancel_tmp_access = $this->giveTemporaryAccess($group_folder_id);
     $readme_content = sprintf(
       'Drupal group: [%s](%s)',
       // @todo Sanitize the text and url for Markdown.
       $drupal_group->label(),
       $drupal_group->toUrl()->setAbsolute()->toString());
-    $this->webdavEndpoint->writeFile($group_folder->getMountPoint() . '/README.md', $readme_content);
-    $cancel_tmp_access();
+    $cancel_tmp_access = $this->giveTemporaryAccess($group_folder_id);
+    try {
+      $this->webdavEndpoint->writeFile($group_folder->getMountPoint() . '/README.md', $readme_content);
+    }
+    finally {
+      $cancel_tmp_access();
+    }
   }
 
   /**
@@ -106,9 +110,7 @@ class NextcloudGroupFolderReadme implements EntityObserverInterface {
    *   Group folder id.
    *
    * @return callable
-   *   Callback to cancel the access and clean up.
-   *
-   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   *   Callback to cancel the access and clean up.´
    */
   private function giveTemporaryAccess(int $group_folder_id): callable {
     $tmp_group_id = 'tmp_group_folder_manager';
@@ -118,9 +120,22 @@ class NextcloudGroupFolderReadme implements EntityObserverInterface {
     }
     catch (NextcloudApiException) {
       // Likely the group already exists.
+      // Ignore and move on.
     }
-    $this->groupFolderEndpoint->addGroup($group_folder_id, $tmp_group_id);
-    $this->userEndpoint->joinGroup($nextcloud_user_id, $tmp_group_id);
+    try {
+      $this->groupFolderEndpoint->addGroup($group_folder_id, $tmp_group_id);
+    }
+    catch (NextcloudApiException) {
+      // Likely the group is already attached to the group folder.
+      // Ignore and move on.
+    }
+    try {
+      $this->userEndpoint->joinGroup($nextcloud_user_id, $tmp_group_id);
+    }
+    catch (NextcloudApiException) {
+      // Likely the user is already member of the group.
+      // Ignore and move on.
+    }
     return function () use ($tmp_group_id) {
       $this->groupEndpoint->delete($tmp_group_id);
     };
