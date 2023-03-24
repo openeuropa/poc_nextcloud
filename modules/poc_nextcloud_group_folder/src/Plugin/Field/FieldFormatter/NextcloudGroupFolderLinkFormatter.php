@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldFormatter;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -193,7 +192,9 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
    */
   protected function viewMissingGroupFolder(int $group_folder_id): array {
     return [
-      '#markup' => '#' . $group_folder_id,
+      '#markup' => $this->t('Group folder @group_folder_id does not exist.', [
+        '@group_folder_id' => $group_folder_id,
+      ]),
     ];
   }
 
@@ -215,12 +216,8 @@ class NextcloudGroupFolderLinkFormatter extends FormatterBase {
     return [
       '#type' => 'link',
       '#url' => $url,
-      '#title' => new FormattableMarkup('#@id: @name', [
-        '@id' => $groupfolder->getId(),
-        '@name' => $groupfolder->getMountPoint(),
-      ]),
+      '#title' => $this->t('Group documents (Nextcloud)'),
     ];
-
   }
 
 }
