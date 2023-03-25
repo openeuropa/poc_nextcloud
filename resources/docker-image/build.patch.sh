@@ -1,6 +1,9 @@
 # Script to download Nextcloud apps.
 
-set -ex
+# Don't exit on single failure.
+set +e
+# Verbose output.
+set -x
 
 cd /usr/src/nextcloud/
 
