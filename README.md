@@ -15,7 +15,7 @@ See [doc/install.md](doc/install.md).
 Edit `/etc/hosts`, and add this line (It might look different on MacOS):
 
 ```
-127.0.1.1       web
+127.0.1.1       web nextcloud
 ```
 
 Open a terminal, open the project directory, run `docker-compose up`.
