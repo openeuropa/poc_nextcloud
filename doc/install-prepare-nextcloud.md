@@ -21,6 +21,14 @@ Apps and patches:
   - If your Nextcloud url uses `http://` instead of `https://` (only advised for testing purposes), you need to patch `user_cas/vendor/jasig/phpcas`:
     - `resources/docker-image/phpCAS.http.patch`
 
+Configure EU Login, if needed:
+- Log into Nextcloud as admin.
+- Visit `/settings/admin/security`.
+- In "CAS Authentication backend":
+  - Under "CAS Server", set the hostname, port etc for EU Login.
+  - Under "Basic", you can change button labels.
+  - Under "ECAS Settings", add additional settings as needed.
+
 API user account:
 - Log into Nextcloud as admin.
 - Visit `/settings/users`.
