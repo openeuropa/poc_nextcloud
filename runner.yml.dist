@@ -11,20 +11,18 @@ drupal:
     user: "root"
     password: ""
   post_install:
-    # Prepare the instance.
-    - "./vendor/bin/drush en toolbar -y"
-    - "./vendor/bin/drush en group -y"
-    - "./vendor/bin/drush en admin_toolbar -y"
-    - "./vendor/bin/drush en field_ui views_ui contextual -y"
-    - "./vendor/bin/drush en extra_field -y"
+    # Set themes.
     - "./vendor/bin/drush theme:enable olivero -y"
     - "./vendor/bin/drush theme:enable claro -y"
     - "./vendor/bin/drush config-set system.theme default olivero -y"
     - "./vendor/bin/drush config-set system.theme admin claro -y"
     - "./vendor/bin/drush config-set node.settings use_admin_theme 1 -y"
-    # Enable the modules.
+    # Enable some utility modules for better admin experience.
+    - "./vendor/bin/drush en toolbar -y"
+    - "./vendor/bin/drush en admin_toolbar -y"
+    - "./vendor/bin/drush en field_ui views_ui contextual -y"
     - "./vendor/bin/drush en config_devel -y"
-    - "./vendor/bin/drush en poc_nextcloud_demo -y"
+    # Enable EU Login.
     - "./vendor/bin/drush en oe_authentication -y"
     # Install EU Login mock, and create test users.
     - "./vendor/bin/drush en oe_authentication_eulogin_mock -y"
@@ -32,8 +30,12 @@ drupal:
     - "./vendor/bin/drush casms-uc alfonso --email=alfonso@example.com --password=alfonsopw"
     - "./vendor/bin/drush casms-uc eliza --email=eliza@example.com --password=elizapw"
     - "./vendor/bin/drush casms-uc pawel --email=pawel@example.com --password=pawelpw"
+    # Enable poc_nextcloud modules.
+    - "./vendor/bin/drush en poc_nextcloud_demo -y"
+    - "./vendor/bin/drush en extra_field -y"
     # Override default front page "/user/login", to prevent redirect loop with EU Login.
     - "./vendor/bin/drush config-set system.site page.front /groups -y"
+    # Clear cache.
     - "./vendor/bin/drush cr"
   settings:
     settings:
