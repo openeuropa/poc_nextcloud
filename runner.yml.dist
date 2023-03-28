@@ -65,7 +65,7 @@ commands:
         // Use the original validation path, as needed for Nextcloud user_cas.
         $config['oe_authentication.settings']['validation_path'] = 'p3/serviceValidate';
         // Set a distinguishable title for the mock login form.
-        $config['cas_mock_server.settings']['login_form.title'] = 'EU Login';
+        $config['cas_mock_server.settings']['login_form']['title'] = 'EU Login';
         // Username does not work, it has to be the email address.
         $config['cas_mock_server.settings']['login_form']['email'] = 'E-mail address';
 
