@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.group_w_group_folder
+id: group_w_group_folder-nx_gf_share
+label: 'Share documents'
+weight: 5
+internal: false
+audience: member
+group_type: group_w_group_folder
+permissions_ui: true
+permissions:
+  - 'nextcloud group folder read'
+  - 'nextcloud group folder share'

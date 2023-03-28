@@ -1,0 +1,8 @@
+name: POC Nextcloud Group Folder
+type: module
+description: Creates Nextcloud group folders for Drupal groups
+package: OpenEuropa
+core_version_requirement: ^9.5
+
+dependencies:
+  - poc_nextcloud:poc_nextcloud

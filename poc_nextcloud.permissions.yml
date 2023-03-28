@@ -1,0 +1,6 @@
+have nextcloud account:
+  title: 'Have a nextcloud account'
+  description: 'Have a nextcloud account automatically created, with the same username.'
+administer poc_nextcloud:
+  title: 'Administer Nextcloud connection'
+  restrict access: true

@@ -2,7 +2,7 @@ drupal:
   root: "build"
   base_url: "http://web:8080/build"
   site:
-    name: "OpenEuropa"
+    name: "Nextcloud POC Demo"
     profile: "minimal"
   database:
     host: "mysql"
@@ -11,16 +11,31 @@ drupal:
     user: "root"
     password: ""
   post_install:
-    # Prepare the instance.
-    - "./vendor/bin/drush en toolbar -y"
-    - "./vendor/bin/drush theme:enable bartik -y"
-    - "./vendor/bin/drush theme:enable seven -y"
-    - "./vendor/bin/drush config-set system.theme default bartik -y"
-    - "./vendor/bin/drush config-set system.theme admin seven -y"
+    # Set themes.
+    - "./vendor/bin/drush theme:enable olivero -y"
+    - "./vendor/bin/drush theme:enable claro -y"
+    - "./vendor/bin/drush config-set system.theme default olivero -y"
+    - "./vendor/bin/drush config-set system.theme admin claro -y"
     - "./vendor/bin/drush config-set node.settings use_admin_theme 1 -y"
-    # Enable the modules.
+    # Enable some utility modules for better admin experience.
+    - "./vendor/bin/drush en toolbar -y"
+    - "./vendor/bin/drush en admin_toolbar -y"
+    - "./vendor/bin/drush en field_ui views_ui contextual -y"
     - "./vendor/bin/drush en config_devel -y"
-    - "./vendor/bin/drush en poc_nextcloud -y"
+    # Enable EU Login.
+    - "./vendor/bin/drush en oe_authentication -y"
+    # Install EU Login mock, and create test users.
+    - "./vendor/bin/drush en oe_authentication_eulogin_mock -y"
+    - "./vendor/bin/drush cas-mock-server:start"
+    - "./vendor/bin/drush casms-uc alfonso --email=alfonso@example.com --password=alfonsopw"
+    - "./vendor/bin/drush casms-uc eliza --email=eliza@example.com --password=elizapw"
+    - "./vendor/bin/drush casms-uc pawel --email=pawel@example.com --password=pawelpw"
+    # Enable poc_nextcloud modules.
+    - "./vendor/bin/drush en poc_nextcloud_demo -y"
+    - "./vendor/bin/drush en extra_field -y"
+    # Override default front page "/user/login", to prevent redirect loop with EU Login.
+    - "./vendor/bin/drush config-set system.site page.front /groups -y"
+    # Clear cache.
     - "./vendor/bin/drush cr"
   settings:
     settings:
@@ -29,12 +44,26 @@ drupal:
         - "bower_components"
         - "vendor"
         - "${drupal.root}"
+drupal_project_symlink:
+  ignore:
+    - ".idea"
+    - "resources"
+    - "spec"
 
 commands:
   drupal:site-setup:
     - { task: "run", command: "drupal:symlink-project" }
     - { task: "run", command: "drupal:drush-setup" }
     - { task: "run", command: "drupal:settings-setup" }
+    - { task: "symlink", from: "../../../resources/settings.symlink.php", to: "${drupal.root}/sites/default/settings.symlink.php" }
+    - task: "append"
+      file: "build/sites/default/settings.override.php"
+      text: |
+        // Additional settings that are live-editable.
+        if (file_exists($app_root . '/' . $site_path . '/settings.symlink.php')) {
+          include $app_root . '/' . $site_path . '/settings.symlink.php';
+        }
+
     - { task: "run", command: "setup:phpunit" }
   setup:phpunit:
     - { task: "process", source: "phpunit.xml.dist", destination: "phpunit.xml" }

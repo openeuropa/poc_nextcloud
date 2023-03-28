@@ -1,10 +1,11 @@
 version: '2'
+
 services:
   web:
-    image: fpfis/httpd-php-dev:7.3
+    image: fpfis/httpd-php-dev:8.0
     working_dir: /var/www/html
     ports:
-      - 8080:8080
+      - "8080:8080"
     volumes:
       - .:/var/www/html # Non Mac users.
       # - nfsmount:/var/www/html # Mac Users with the nfsmount volume.
@@ -15,6 +16,12 @@ services:
       PHP_IDE_CONFIG: "serverName=Docker"
       # Enable step debugging for all PHP request. See ./README.md#step-debugging for more information.
       # XDEBUG_SESSION: 1
+      NEXTCLOUD_API_USER: admin
+      NEXTCLOUD_API_PASS: admin
+      NEXTCLOUD_API_URL: http://nextcloud/
+      NEXTCLOUD_WEB_URL: http://localhost:8081/
+      NEXTCLOUD_CRYPT_SECRET: W76apvVvJ8yVxt2oA3FLPgZK65rRLLZ5QA6MgsxZqLmeSXVQ
+
   mysql:
     image: percona/percona-server:5.7
     command: --innodb-log-file-size=1G --max_allowed_packet=1G --innodb-buffer-pool-size=512M --wait_timeout=3000 --net_write_timeout=3000 --log_error_verbosity=3
@@ -22,6 +29,42 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     # ports:
     #   - 3306:3306
+
+  # See https://hub.docker.com/_/nextcloud.
+  nextcloud_db:
+    image: mariadb:10.5
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpw
+      - MYSQL_PASSWORD=nextpw
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  nextcloud:
+    build:
+      context: ./resources/docker-image
+      dockerfile: Dockerfile
+    depends_on:
+      - nextcloud_db
+    restart: always
+    ports:
+      - "8081:80"
+    links:
+      - nextcloud_db
+    volumes:
+      # Insert custom php configuration.
+      - ./resources/php-custom.ini:/usr/local/etc/php/conf.d/custom.ini
+    environment:
+      MYSQL_PASSWORD: nextpw
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_HOST: nextcloud_db
+      # By providing user and password, Nextcloud will be fully installed.
+      NEXTCLOUD_ADMIN_USER: admin
+      NEXTCLOUD_ADMIN_PASSWORD: admin
+      PHP_IDE_CONFIG: "serverName=nextcloud"
+
 
 #### Mac users: uncomment the "volumes" key to enable the NFS file sharing. You can find more information about Docker for Mac here: https://github.com/openeuropa/openeuropa/blob/master/docs/starting/tooling.md#using-docker-on-macos
 

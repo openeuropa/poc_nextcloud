@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.group_w_group_folder
+id: group_w_group_folder-nx_gf_manag
+label: 'Manage per-document access'
+weight: 6
+internal: false
+audience: member
+group_type: group_w_group_folder
+permissions_ui: true
+permissions:
+  - 'nextcloud group folder manage'
+  - 'nextcloud group folder read'

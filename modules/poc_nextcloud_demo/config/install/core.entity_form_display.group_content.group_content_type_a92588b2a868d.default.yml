@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group_content.group_content_type_a92588b2a868d.group_roles
+    - group.content_type.group_content_type_a92588b2a868d
+id: group_content.group_content_type_a92588b2a868d.default
+targetEntityType: group_content
+bundle: group_content_type_a92588b2a868d
+mode: default
+content:
+  entity_id:
+    type: entity_reference_autocomplete
+    weight: 5
+    region: content
+    settings:
+      match_operator: CONTAINS
+      match_limit: 10
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  group_roles:
+    type: options_buttons
+    weight: 6
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  uid: true
