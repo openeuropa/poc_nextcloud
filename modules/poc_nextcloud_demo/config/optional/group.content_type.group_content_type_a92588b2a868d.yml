@@ -6,8 +6,6 @@ dependencies:
   module:
     - user
 id: group_content_type_a92588b2a868d
-label: 'Group with group folder: Group membership'
-description: 'Adds users to groups as members.'
 group_type: group_w_group_folder
 content_plugin: group_membership
 plugin_config:

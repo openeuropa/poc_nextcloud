@@ -6,11 +6,10 @@ dependencies:
 id: group_w_group_folder-nx_gf_edit
 label: 'Edit documents'
 weight: 7
-internal: false
-audience: member
 group_type: group_w_group_folder
-permissions_ui: true
 permissions:
   - 'nextcloud group folder delete'
   - 'nextcloud group folder read'
   - 'nextcloud group folder write'
+admin: false
+scope: individual
