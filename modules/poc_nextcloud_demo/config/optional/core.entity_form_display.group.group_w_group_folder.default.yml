@@ -9,12 +9,6 @@ targetEntityType: group
 bundle: group_w_group_folder
 mode: default
 content:
-  field_group_folder:
-    type: null
-    weight: 121
-    region: content
-    settings: {  }
-    third_party_settings: {  }
   label:
     type: string_textfield
     weight: 0
@@ -31,4 +25,5 @@ content:
       display_label: true
     third_party_settings: {  }
 hidden:
+  field_group_folder: true
   uid: true
