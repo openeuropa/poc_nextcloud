@@ -5,10 +5,11 @@ dependencies:
     - group.type.group_w_group_folder
 id: group_w_group_folder-nx_gf_manag
 label: 'Manage per-document access'
-weight: 6
+weight: 1
+admin: false
+scope: individual
+global_role: null
 group_type: group_w_group_folder
 permissions:
   - 'nextcloud group folder manage'
   - 'nextcloud group folder read'
-admin: false
-scope: individual
