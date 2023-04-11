@@ -7,6 +7,7 @@ namespace Drupal\poc_nextcloud_group_folder\EntityObserver;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\group\Entity\GroupContentInterface;
 use Drupal\group\Entity\GroupInterface;
+use Drupal\group\Entity\GroupRelationshipInterface;
 use Drupal\group\Entity\GroupRoleInterface;
 use Drupal\group\Entity\GroupTypeInterface;
 use Drupal\group\GroupMembership;
@@ -66,12 +67,15 @@ class NextcloudGroupMemberships implements EntityObserverInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
   public function entityOp(EntityInterface $entity, string $op): void {
     if (!in_array($op, ['update', 'insert', 'delete'])) {
       return;
     }
-    if ($entity instanceof GroupContentInterface) {
+    // Support different versions of drupal/group.
+    if ($entity instanceof GroupRelationshipInterface || $entity instanceof GroupContentInterface) {
       try {
         $entity = new GroupMembership($entity);
       }
