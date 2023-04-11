@@ -54,8 +54,14 @@ commands:
   drupal:site-setup:
     - { task: "run", command: "drupal:symlink-project" }
     - { task: "run", command: "drupal:drush-setup" }
-    - { task: "run", command: "drupal:settings-setup" }
+    # Suppress permissions setup. Do it as a separate command later.
+    # Without this, the settings.symlink.php and other files become executable.
+    # See https://github.com/openeuropa/task-runner/issues/113.
+    - { task: "run", command: "drupal:settings-setup", arguments: "--skip-permissions-setup" }
     - { task: "symlink", from: "../../../resources/settings.symlink.php", to: "${drupal.root}/sites/default/settings.symlink.php" }
+    # Fix the file permissions as a separate command.
+    # Directories need the "x" bit, files do not.
+    - "chmod -R a-x,a+X build/sites/default"
     - task: "append"
       file: "build/sites/default/settings.override.php"
       text: |
