@@ -208,9 +208,17 @@ display:
           default_row_class: true
           columns:
             label: label
+            field_group_folder: field_group_folder
           default: '-1'
           info:
             label:
+              sortable: false
+              default_sort_order: asc
+              align: ''
+              separator: ''
+              empty_column: false
+              responsive: ''
+            field_group_folder:
               sortable: false
               default_sort_order: asc
               align: ''
@@ -224,7 +232,7 @@ display:
           caption: ''
           description: ''
       row:
-        type: 'entity:group'
+        type: fields
       query:
         type: views_query
         options:
