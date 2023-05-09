@@ -57,6 +57,8 @@ class DrupalGroupLoader {
    *
    * @return \Drupal\group\Entity\GroupInterface[]
    *   Groups.
+   *
+   * @todo Use a query, and return an iterator to not exhaust memory.
    */
   public function loadGroupsForType(GroupTypeInterface $group_type): array {
     /** @var \Drupal\group\Entity\GroupInterface[] $groups */
