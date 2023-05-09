@@ -89,10 +89,7 @@ class OpenSSLCryptor implements CryptorInterface {
    *   Error handler callback.
    */
   private function getExceptionErrorHandler(): callable {
-    return function (
-      int $errno,
-      string $errstr,
-    ) {
+    return static function (int $errno, string $errstr) {
       throw new ValueException(sprintf(
         'Failed to encrypt value: [%s] %s',
         $errno,
