@@ -1,0 +1,7 @@
+services:
+  poc_nextcloud.commands:
+    class: \Drupal\poc_nextcloud\Commands\PocNextcloudCommands
+    arguments:
+      - '@Drupal\poc_nextcloud\Job\ProgressiveJobInterface'
+    tags:
+      - { name: drush.command }
