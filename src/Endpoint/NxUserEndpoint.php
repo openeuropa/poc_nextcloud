@@ -123,13 +123,17 @@ class NxUserEndpoint {
    * @param string $user_id
    *   User id.
    *
+   * @return bool
+   *   TRUE if user was deleted, FALSE if user did not exist.
+   *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    *   Something went wrong.
    */
-  public function deleteIfExists(string $user_id): void {
-    $this->doDelete($user_id)
+  public function deleteIfExists(string $user_id): bool {
+    $response = $this->doDelete($user_id)
       ->nullIfStatusCode(998)
       ?->throwIfFailure();
+    return $response !== NULL;
   }
 
   /**
