@@ -20,6 +20,7 @@ class OpenSSLCryptor implements CryptorInterface {
    *   Algorithm for OpenSSL.
    */
   public function __construct(
+    /* @noinspection PhpInapplicableAttributeTargetDeclarationInspection */
     #[\SensitiveParameter]
     private string $secret,
     private string $cipherAlgo = 'AES-256-GCM',
