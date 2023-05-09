@@ -20,16 +20,25 @@ services:
   Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxWebdavEndpoint: {}
-  Drupal\poc_nextcloud\EntityObserver\NextcloudUsers:
-    arguments:
-      # Explicitly set arguments that cannot be autowired.
-      # See https://www.drupal.org/project/drupal/issues/3336739
-      Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
-  poc_nextcloud.entity_observer:
-    class: Drupal\poc_nextcloud\EntityObserver\Multicast
-    factory: [~, fromServiceIdsWithEmptyFallback]
-    arguments:
-      - '@service_container'
-      - '@logger.channel.poc_nextcloud'
-      -
-        - Drupal\poc_nextcloud\EntityObserver\NextcloudUsers
+  Drupal\poc_nextcloud\Tracking\TrackingTableFactory:
+    arguments: ['@database']
+  Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker:
+    tags:
+      - { name: 'poc_nextcloud.sync_job' }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderGroupSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderReadmeSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcUserSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcUserGroupSubmit: {}
+  Drupal\poc_nextcloud\Job\ProgressiveJobInterface:
+    class: Drupal\poc_nextcloud\Job\MulticastJob
+    factory: [~, fromJobCollector]
+  Drupal\poc_nextcloud\Job\Collector\JobCollector:
+    tags:
+      - { name: service_collector, tag: 'poc_nextcloud.sync_job', call: addJobProvider }
+  Drupal\poc_nextcloud\Database\HookSchemaRegistry:
+    tags:
+      - { name: service_collector, tag: 'poc_nextcloud.schema', call: addProvider }

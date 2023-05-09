@@ -7,26 +7,31 @@ services:
   Drupal\poc_nextcloud_group_folder\Service\GroupRoleToGroupId: {}
   Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader:
     arguments: ['@entity_type.manager']
-  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderGroupPerms: {}
-  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolders: {}
-  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderReadme: {}
-  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupMemberships:
-    arguments:
-      # Explicitly set arguments that cannot be autowired.
-      # See https://www.drupal.org/project/drupal/issues/3336739
-      Drupal\group\GroupMembershipLoaderInterface: '@group.membership_loader'
-  Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroups: {}
-  poc_nextcloud_group_folder.entity_observer:
-    class: Drupal\poc_nextcloud\EntityObserver\Multicast
-    factory: [~, fromServiceIdsWithEmptyFallback]
-    arguments:
-      - '@service_container'
-      - '@logger.channel.poc_nextcloud'
-      -
-        # Groups must be created before memberships.
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroups
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupMemberships
-        # Groups and group folders must be created before adding groups to group folders.
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolders
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderGroupPerms
-        - Drupal\poc_nextcloud_group_folder\EntityObserver\NextcloudGroupFolderReadme
+  Drupal\poc_nextcloud_group_folder\Tracker\GroupAndRoleNcGroupTracker:
+    tags:
+      - { name: 'poc_nextcloud.sync_job' }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderTracker:
+    tags:
+      - { name: 'poc_nextcloud.sync_job' }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud_group_folder\Tracker\GroupAndRoleNcGroupFolderGroupTracker:
+    tags:
+      # This depends on Nextcloud group folders and Nextcloud groups.
+      - { name: 'poc_nextcloud.sync_job', priority: 10 }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud_group_folder\Tracker\GroupMembershipRoleNcUserGroupTracker:
+    tags:
+      # This depends on Nextcloud users and Nextcloud groups.
+      - { name: 'poc_nextcloud.sync_job', priority: 10 }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderReadmeTracker:
+    tags:
+      # This depends on Nextcloud users and Nextcloud groups.
+      - { name: 'poc_nextcloud.sync_job', priority: 10 }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }

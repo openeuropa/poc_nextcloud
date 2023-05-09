@@ -8,9 +8,8 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
-use Drupal\poc_nextcloud\Service\NextcloudUserMap;
+use Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker;
 use Drupal\user\UserInterface;
 use Drupal\user\UserStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -39,8 +38,8 @@ class NextcloudFilesLinkBlock extends BlockBase implements ContainerFactoryPlugi
    *   Current user.
    * @param \Drupal\user\UserStorageInterface $userStorage
    *   User storage.
-   * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
-   *   Nextcloud user map.
+   * @param \Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker $userNcUserTracker
+   *   Nextcloud user tracker.
    * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudUrlBuilder
    *   Nextcloud url builder.
    */
@@ -50,7 +49,7 @@ class NextcloudFilesLinkBlock extends BlockBase implements ContainerFactoryPlugi
     array $plugin_definition,
     private AccountInterface $currentUser,
     private UserStorageInterface $userStorage,
-    private NextcloudUserMap $nextcloudUserMap,
+    private UserNcUserTracker $userNcUserTracker,
     private NextcloudUrlBuilder $nextcloudUrlBuilder,
   ) {
     parent::__construct(
@@ -69,32 +68,19 @@ class NextcloudFilesLinkBlock extends BlockBase implements ContainerFactoryPlugi
     $plugin_id,
     $plugin_definition,
   ): BlockPluginInterface {
-    try {
-      return new self(
-        $configuration,
-        $plugin_id,
-        $plugin_definition,
-        $container->get('current_user'),
-        $container->get('entity_type.manager')->getStorage('user'),
-        $container->get(NextcloudUserMap::class),
-        $container->get(NextcloudUrlBuilder::class),
-      );
-    }
-    catch (ServiceNotAvailableException) {
-      return new EmptyBlock(
-        $configuration,
-        $plugin_id,
-        $plugin_definition,
-      );
-    }
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('current_user'),
+      $container->get('entity_type.manager')->getStorage('user'),
+      $container->get(UserNcUserTracker::class),
+      $container->get(NextcloudUrlBuilder::class),
+    );
   }
 
   /**
    * {@inheritdoc}
-   *
-   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
-   *
-   * @todo Catch exceptions here.
    */
   public function build(): array {
     // @todo Use ->blockAccess() method, and set proper cache info.
@@ -107,8 +93,8 @@ class NextcloudFilesLinkBlock extends BlockBase implements ContainerFactoryPlugi
     if (!$drupal_user instanceof UserInterface) {
       return [];
     }
-    $nextcloud_user = $this->nextcloudUserMap->getNextcloudUser($drupal_user);
-    if ($nextcloud_user === NULL) {
+    $user_record = $this->userNcUserTracker->findCurrentUserRecord($drupal_user);
+    if ($user_record === NULL) {
       // The user has no account in Nextcloud.
       return [];
     }
@@ -120,6 +106,15 @@ class NextcloudFilesLinkBlock extends BlockBase implements ContainerFactoryPlugi
       '#title' => $this->t('My documents in Nextcloud'),
       '#url' => $url,
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge(): int {
+    // Suppress the cache, for now.
+    // @todo Implement proper cache handling.
+    return 0;
   }
 
 }
