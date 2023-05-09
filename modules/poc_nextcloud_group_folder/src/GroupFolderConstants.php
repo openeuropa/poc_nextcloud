@@ -19,12 +19,4 @@ class GroupFolderConstants {
     NextcloudConstants::PERMISSION_ADVANCED => 'nextcloud group folder manage',
   ];
 
-  public const PERMISSIONS_SHORTCODE_MAP = [
-    NextcloudConstants::PERMISSION_READ => 'r',
-    NextcloudConstants::PERMISSION_WRITE => 'w',
-    NextcloudConstants::PERMISSION_SHARE => 's',
-    NextcloudConstants::PERMISSION_DELETE => 'd',
-    NextcloudConstants::PERMISSION_ADVANCED => 'x',
-  ];
-
 }
