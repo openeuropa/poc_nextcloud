@@ -38,7 +38,7 @@ class NextcloudGroupFolderItem extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public static function schema(FieldStorageDefinitionInterface $field_definition) {
+  public static function schema(FieldStorageDefinitionInterface $field_definition): array {
     return [
       'columns' => [
         'value' => [
@@ -56,7 +56,7 @@ class NextcloudGroupFolderItem extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public function isEmpty() {
+  public function isEmpty(): bool {
     // An id of 0 also counts as empty.
     return empty($this->value);
   }
@@ -64,7 +64,7 @@ class NextcloudGroupFolderItem extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public function getConstraints() {
+  public function getConstraints(): array {
     return [];
   }
 
