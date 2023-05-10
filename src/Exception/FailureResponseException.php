@@ -17,7 +17,7 @@ class FailureResponseException extends NextcloudApiException {
    *
    * @var int
    */
-  private int $responseSatusCode;
+  private int $responseStatusCode;
 
   /**
    * Message from $response['ocs']['meta']['message'].
@@ -36,7 +36,7 @@ class FailureResponseException extends NextcloudApiException {
    */
   public function __construct(int $statuscode, string $message) {
     parent::__construct("$statuscode: $message");
-    $this->responseSatusCode = $statuscode;
+    $this->responseStatusCode = $statuscode;
     $this->responseMessage = $message;
   }
 
@@ -47,7 +47,7 @@ class FailureResponseException extends NextcloudApiException {
    *   Status code from $response['ocs']['meta']['statuscode'].
    */
   public function getResponseStatusCode(): int {
-    return $this->responseSatusCode;
+    return $this->responseStatusCode;
   }
 
   /**
