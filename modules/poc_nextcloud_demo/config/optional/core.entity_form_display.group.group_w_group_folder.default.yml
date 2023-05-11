@@ -2,7 +2,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.group.group_w_group_folder.field_group_folder
     - group.type.group_w_group_folder
 id: group.group_w_group_folder.default
 targetEntityType: group
@@ -25,5 +24,4 @@ content:
       display_label: true
     third_party_settings: {  }
 hidden:
-  field_group_folder: true
   uid: true
