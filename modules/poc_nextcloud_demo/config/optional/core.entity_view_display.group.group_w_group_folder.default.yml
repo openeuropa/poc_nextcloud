@@ -8,13 +8,18 @@ targetEntityType: group
 bundle: group_w_group_folder
 mode: default
 content:
+  extra_field_poc_nextcloud_group_folder_link:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
   label:
     type: string
     label: hidden
     settings:
       link_to_entity: false
     third_party_settings: {  }
-    weight: -5
+    weight: 0
     region: content
 hidden:
   changed: true
