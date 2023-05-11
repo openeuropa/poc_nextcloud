@@ -6,6 +6,6 @@ label: 'Group with group folder'
 description: ''
 new_revision: true
 creator_membership: true
-creator_wizard: true
+creator_wizard: false
 creator_roles:
   - group_w_group_folder-nx_gf_edit
