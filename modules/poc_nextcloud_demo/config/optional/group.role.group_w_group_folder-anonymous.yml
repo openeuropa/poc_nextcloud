@@ -1,0 +1,14 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.group_w_group_folder
+    - user.role.anonymous
+id: group_w_group_folder-anonymous
+label: Anonymous
+weight: -102
+admin: false
+scope: outsider
+global_role: anonymous
+group_type: group_w_group_folder
+permissions: {  }

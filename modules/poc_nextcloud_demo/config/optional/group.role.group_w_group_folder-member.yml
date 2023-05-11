@@ -1,0 +1,14 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.group_w_group_folder
+    - user.role.authenticated
+id: group_w_group_folder-member
+label: Member
+weight: -100
+admin: false
+scope: insider
+global_role: authenticated
+group_type: group_w_group_folder
+permissions: {  }
