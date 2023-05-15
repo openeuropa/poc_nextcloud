@@ -13,7 +13,6 @@ use Drupal\poc_nextcloud\Tracking\RecordSubmit\NcUserGroupSubmit;
 use Drupal\poc_nextcloud\Tracking\Tracker\TrackerBase;
 use Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker;
 use Drupal\poc_nextcloud\Tracking\TrackingTableFactory;
-use Drupal\poc_nextcloud\Tracking\TrackingTableRelationship;
 
 /**
  * Queues up user data for write to Nextcloud.
@@ -27,41 +26,21 @@ class GroupMembershipRoleNcUserGroupTracker extends TrackerBase {
    *
    * @param \Drupal\poc_nextcloud\Tracking\TrackingTableFactory $trackingTableFactory
    *   Tracking table factory.
+   * @param \Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker $userNcUserTracker
+   *   Parent tracker to map Drupal users to Nextcloud users.
+   * @param \Drupal\poc_nextcloud_group_folder\Tracker\GroupAndRoleNcGroupTracker $groupAndRoleNcGroupTracker
+   *   Parent tracker to map Drupal groups and group roles to Nextcloud groups.
    */
   public function __construct(
     TrackingTableFactory $trackingTableFactory,
+    UserNcUserTracker $userNcUserTracker,
+    GroupAndRoleNcGroupTracker $groupAndRoleNcGroupTracker,
   ) {
     parent::__construct(
       NcUserGroupSubmit::class,
       $trackingTableFactory->create(self::TABLE_NAME)
-        ->addLocalPrimaryField('uid', [
-          'description' => 'Drupal user id',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ])
-        ->addLocalPrimaryField('gid', [
-          'description' => 'Drupal group id',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ])
-        ->addLocalPrimaryField('group_role_id', [
-          'description' => 'Drupal group role id',
-          'type' => 'varchar',
-          'length' => 254,
-          'not null' => TRUE,
-        ])
-        ->addParentTableRelationship('u', new TrackingTableRelationship(
-          UserNcUserTracker::TABLE_NAME,
-          ['uid' => 'uid'],
-          ['nc_user_id'],
-        ))
-        ->addParentTableRelationship('g', new TrackingTableRelationship(
-          GroupAndRoleNcGroupTracker::TABLE_NAME,
-          ['gid' => 'gid', 'group_role_id' => 'group_role_id'],
-          ['nc_group_id'],
-        )),
+        ->addParentTable('u', $userNcUserTracker->trackingTable)
+        ->addParentTable('g', $groupAndRoleNcGroupTracker->trackingTable)
     );
   }
 

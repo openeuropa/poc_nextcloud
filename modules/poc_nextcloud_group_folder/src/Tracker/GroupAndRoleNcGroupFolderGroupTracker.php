@@ -11,7 +11,6 @@ use Drupal\poc_nextcloud\DataUtil;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderGroupSubmit;
 use Drupal\poc_nextcloud\Tracking\Tracker\TrackerBase;
 use Drupal\poc_nextcloud\Tracking\TrackingTableFactory;
-use Drupal\poc_nextcloud\Tracking\TrackingTableRelationship;
 use Drupal\poc_nextcloud_group_folder\GroupFolderConstants;
 use Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader;
 
@@ -29,48 +28,31 @@ class GroupAndRoleNcGroupFolderGroupTracker extends TrackerBase {
    *
    * @param \Drupal\poc_nextcloud\Tracking\TrackingTableFactory $trackingTableFactory
    *   Tracking table factory.
+   * @param \Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderTracker $groupNcGroupFolderTracker
+   *   Parent tracker to map Drupal groups to Nextcloud group folders.
+   * @param \Drupal\poc_nextcloud_group_folder\Tracker\GroupAndRoleNcGroupTracker $groupAndRoleNcGroupTracker
+   *   Parent tracker to map Drupal groups and group roles to Nextcloud groups.
    * @param \Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader $drupalGroupLoader
    *   Drupal group loader.
    */
   public function __construct(
     TrackingTableFactory $trackingTableFactory,
+    GroupNcGroupFolderTracker $groupNcGroupFolderTracker,
+    GroupAndRoleNcGroupTracker $groupAndRoleNcGroupTracker,
     private DrupalGroupLoader $drupalGroupLoader,
   ) {
     parent::__construct(
       NcGroupFolderGroupSubmit::class,
       $trackingTableFactory->create(self::TABLE_NAME)
-        ->addLocalPrimaryField('gid', [
-          'description' => 'Drupal group id',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ])
-        ->addLocalPrimaryField('group_role_id', [
-          'description' => 'Drupal group role id',
-          'type' => 'varchar',
-          'length' => 254,
-          'not null' => TRUE,
-        ])
+        // Both of these parent tables define the 'gid' key.
+        ->addParentTable('gf', $groupNcGroupFolderTracker->trackingTable)
+        ->addParentTable('g', $groupAndRoleNcGroupTracker->trackingTable)
         ->addDataField('nc_permissions', [
           'description' => 'Permissions bitmask for read, write, share, acl.',
           'type' => 'int',
           'unsigned' => TRUE,
           'not null' => TRUE,
         ])
-        ->addParentTableRelationship('gf', new TrackingTableRelationship(
-          GroupNcGroupFolderTracker::TABLE_NAME,
-          ['gid' => 'gid'],
-          ['nc_group_folder_id'],
-          // @todo Check if auto delete really works in this case.
-          TRUE,
-        ))
-        ->addParentTableRelationship('g', new TrackingTableRelationship(
-          GroupAndRoleNcGroupTracker::TABLE_NAME,
-          ['gid' => 'gid', 'group_role_id' => 'group_role_id'],
-          ['nc_group_id'],
-          // @todo Check if auto delete really works in this case.
-          TRUE,
-        )),
     );
   }
 

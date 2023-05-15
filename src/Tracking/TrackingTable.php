@@ -17,6 +17,8 @@ use Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface;
  * Object to control a database table to track pending writes to Nextcloud.
  *
  * @template RecordType as array
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class TrackingTable {
 
@@ -110,6 +112,15 @@ class TrackingTable {
    * @return $this
    */
   public function addLocalPrimaryField(string $key, array $schema): static {
+    if ($existing_schema = $this->schemaFields[$key] ?? NULL) {
+      // Allow adding the same field twice, but only if they are identical.
+      if (!isset($this->localKey[$key])) {
+        throw new \InvalidArgumentException("The field '$key' was already added, but not as a primary key field.");
+      }
+      if ($existing_schema !== $schema) {
+        throw new \InvalidArgumentException("The field '$key' was already added, but with a different schema.");
+      }
+    }
     $this->localKey[$key] = $key;
     $this->primaryKey[$key] = $key;
     $this->schemaFields[$key] = $schema;
@@ -163,6 +174,43 @@ class TrackingTable {
    */
   public function addParentTableRelationship(string $alias, TrackingTableRelationship $relationship): static {
     $this->relationships[$alias] = $relationship;
+    return $this;
+  }
+
+  /**
+   * Adds a parent table relationship based on a parent table object.
+   *
+   * When data from this table is synced to Nextcloud, data from the parent
+   * tables is added via INNER JOIN. This also means that records where the
+   * parent object does not yet exist in Nextcloud won't be written.
+   *
+   * @param string $alias
+   *   Alias for the parent table to use in queries.
+   * @param \Drupal\poc_nextcloud\Tracking\TrackingTable $parent
+   *   Parent tracking table object.
+   * @param string[]|null $source_fields
+   *   Fields from the parent table to add to the query results,
+   *   or NULL to add all the remote fields from the parent table, but not the
+   *   local fields.
+   * @param bool $auto_delete
+   *   TRUE, if dependent records are automatically deleted when the dependee is
+   *     deleted in Nextcloud.
+   *   FALSE, if orphan dependent records remain in Nextcloud. This could be due
+   *     to a shortcoming in Nextcloud, or because the dependee is not actually
+   *     deleted but just "forgotten".
+   *
+   * @return $this
+   */
+  public function addParentTable(string $alias, TrackingTable $parent, array $source_fields = NULL, bool $auto_delete = TRUE): static {
+    foreach ($parent->localKey as $key) {
+      $this->addLocalPrimaryField($key, $parent->schemaFields[$key]);
+    }
+    $this->addParentTableRelationship($alias, new TrackingTableRelationship(
+      $parent->tableName,
+      $parent->localKey,
+      $source_fields ?? array_keys($parent->remoteKey + $parent->remoteControlledFields),
+      $auto_delete,
+    ));
     return $this;
   }
 

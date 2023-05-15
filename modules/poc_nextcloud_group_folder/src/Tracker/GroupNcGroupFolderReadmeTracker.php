@@ -9,7 +9,6 @@ use Drupal\hux\Attribute\Hook;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderReadmeSubmit;
 use Drupal\poc_nextcloud\Tracking\Tracker\TrackerBase;
 use Drupal\poc_nextcloud\Tracking\TrackingTableFactory;
-use Drupal\poc_nextcloud\Tracking\TrackingTableRelationship;
 
 /**
  * Tracks the README.md file for group folders.
@@ -23,31 +22,27 @@ class GroupNcGroupFolderReadmeTracker extends TrackerBase {
    *
    * @param \Drupal\poc_nextcloud\Tracking\TrackingTableFactory $trackingTableFactory
    *   Tracking table factory.
+   * @param \Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderTracker $groupNcGroupFolderTracker
+   *   Parent tracker to map Drupal groups to Nextcloud group folders.
    */
   public function __construct(
     TrackingTableFactory $trackingTableFactory,
+    GroupNcGroupFolderTracker $groupNcGroupFolderTracker,
   ) {
     parent::__construct(
       NcGroupFolderReadmeSubmit::class,
       $trackingTableFactory->create(self::TABLE_NAME)
-        ->addLocalPrimaryField('gid', [
-          'description' => 'Drupal group id',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ])
+        ->addParentTable(
+          'g',
+          $groupNcGroupFolderTracker->trackingTable,
+          ['nc_group_folder_id', 'nc_mount_point'],
+        )
         ->addDataField('nc_readme_content', [
           'description' => 'Content of a README.md for a group folder.',
           'type' => 'text',
           'size' => 'normal',
           'not null' => FALSE,
-        ])
-        ->addParentTableRelationship('g', new TrackingTableRelationship(
-          GroupNcGroupFolderTracker::TABLE_NAME,
-          ['gid' => 'gid'],
-          ['nc_group_folder_id', 'nc_mount_point'],
-          TRUE,
-        )),
+        ]),
     );
   }
 
