@@ -10,6 +10,7 @@ use Drupal\poc_nextcloud\Exception\NextcloudApiException;
 use Drupal\poc_nextcloud\Exception\UnexpectedResponseDataException;
 use Drupal\poc_nextcloud\NxEntity\NxGroupFolder;
 use Drupal\poc_nextcloud\Response\OcsResponse;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ServerException;
 
 /**
@@ -326,13 +327,27 @@ class NxGroupFolderEndpoint {
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
    */
   public function setManageAcl(int $group_folder_id, string $mapping_type, string $mapping_id, bool $manage_acl): void {
-    $this->folderPath($group_folder_id)
-      ->requestOcs('POST', '/manageACL', [
-        'mappingType' => $mapping_type,
-        'mappingId' => $mapping_id,
-        'manageAcl' => $manage_acl,
-      ])
-      ->throwIfFailure();
+    try {
+      $response = $this->folderPath($group_folder_id)
+        ->requestOcs('POST', '/manageACL', [
+          'mappingType' => $mapping_type,
+          'mappingId' => $mapping_id,
+          'manageAcl' => $manage_acl,
+        ]);
+    }
+    catch (NextcloudApiException $e) {
+      $prev = $e->getPrevious();
+      if ($prev instanceof BadResponseException) {
+        $body = (string) $prev->getResponse()?->getBody();
+        if (str_contains($body, 'Duplicate entry') && $manage_acl) {
+          // This error can be ignored.
+          // See https://github.com/nextcloud/groupfolders/issues/2378.
+          return;
+        }
+      }
+      throw $e;
+    }
+    $response->throwIfFailure();
   }
 
   /**
