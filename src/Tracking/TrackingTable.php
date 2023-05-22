@@ -87,6 +87,13 @@ class TrackingTable {
   private array $relationships = [];
 
   /**
+   * Position in the dependency hierarchy.
+   *
+   * @var int
+   */
+  private int $dependencyLevel = 0;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $connection
@@ -211,6 +218,7 @@ class TrackingTable {
       $source_fields ?? array_keys($parent->remoteKey + $parent->remoteControlledFields),
       $auto_delete,
     ));
+    $this->dependencyLevel = max($this->dependencyLevel, $parent->dependencyLevel + 10);
     return $this;
   }
 
@@ -359,17 +367,15 @@ class TrackingTable {
    * @see \Drupal\poc_nextcloud\Job\Provider\JobProviderInterface::collectJobs()
    */
   public function collectJobs(JobCollectorInterface $collector, TrackingRecordSubmitInterface $submit): void {
-    // @todo More sophisticated way to determine order.
-    $dependency_level ??= ($this->relationships ? 10 : 0);
     foreach ($this->relationships as $alias => $relationship) {
       if ($relationship->isAutoDelete()) {
-        $collector->addJob(FALSE, $dependency_level, new DependentPostDeleteJob(
+        $collector->addJob(FALSE, $this->dependencyLevel, new DependentPostDeleteJob(
           $this,
           $relationship,
         ));
       }
       else {
-        $collector->addJob(FALSE, -$dependency_level, new DependentPreDeleteJob(
+        $collector->addJob(FALSE, -$this->dependencyLevel, new DependentPreDeleteJob(
           $this,
           $submit,
           $alias,
@@ -378,7 +384,7 @@ class TrackingTable {
     }
     foreach ([[Op::DELETE], [Op::INSERT, Op::UPDATE]] as $phase => $ops) {
       foreach ($ops as $op) {
-        $collector->addJob((bool) $phase, $dependency_level, new TrackingTableOpJob(
+        $collector->addJob((bool) $phase, $this->dependencyLevel, new TrackingTableOpJob(
           $this,
           $submit,
           $op,
