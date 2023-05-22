@@ -33,11 +33,21 @@ class NcGroupSubmit implements TrackingRecordSubmitInterface {
 
     switch ($op) {
       case Op::UPDATE:
-        $this->groupEndpoint->setDisplayName($group_id, $display_name);
+        try {
+          $this->groupEndpoint->setDisplayName($group_id, $display_name);
+        }
+        catch (\Exception $e) {
+          $this->groupEndpoint->insert($group_id, $display_name);
+        }
         break;
 
       case Op::INSERT:
-        $this->groupEndpoint->insert($group_id, $display_name);
+        try {
+          $this->groupEndpoint->insert($group_id, $display_name);
+        }
+        catch (\Exception $e) {
+          $this->groupEndpoint->setDisplayName($group_id, $display_name);
+        }
         break;
 
       case Op::DELETE:
