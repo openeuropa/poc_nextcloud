@@ -50,7 +50,7 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
     $stmt = $q->execute();
     while ($record = $stmt->fetchAssoc()) {
       $this->trackingRecordSubmit->submitTrackingRecord($record, Op::DELETE);
-      $this->trackingTable->reportRecordDeleted($record, FALSE);
+      $this->trackingTable->reportRemoteAbsence($record);
       // Report the progress increment.
       yield 1;
     }

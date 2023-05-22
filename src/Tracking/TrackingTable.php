@@ -231,36 +231,6 @@ class TrackingTable {
   }
 
   /**
-   * Reports that targets no longer exist in Nextcloud.
-   *
-   * @param array $condition
-   *   Array with keys to filter by.
-   *   Values that are not part of the primary key are ignored.
-   * @param bool $strict
-   *   TRUE to verify the the record was actually marked for deletion.
-   */
-  public function reportRecordDeleted(array $condition, bool $strict): void {
-    // Forget tracking records that were already marked for deletion.
-    $q = $this->connection->delete($this->tableName);
-    $q->condition('pending_operation', Op::DELETE);
-    $this->filterQuery($q, $condition);
-    $n_deleted = $q->execute();
-    if (!$strict) {
-      // Mark for re-insert, if it was not marked for deletion.
-      // This can happen if the target has to be recreated with new keys.
-      $q = $this->connection->update($this->tableName);
-      $q->condition('pending_operation', [
-        Op::INSERT,
-        Op::DELETE,
-      ], 'NOT IN');
-      $this->filterQuery($q, $condition);
-    }
-    elseif (!$n_deleted) {
-      throw new \RuntimeException('The record that was supposedly marked for deletion was not found.');
-    }
-  }
-
-  /**
    * Filters a database query by primary key values.
    *
    * @param \Drupal\Core\Database\Query\ConditionInterface $query

@@ -48,7 +48,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
       $record_orig = $record;
       $this->trackingRecordSubmit->submitTrackingRecord($record, $this->op);
       if ($this->op === Op::DELETE) {
-        $this->trackingTable->reportRecordDeleted($record_orig, TRUE);
+        $this->trackingTable->reportRemoteAbsence($record_orig);
       }
       else {
         $this->trackingTable->reportRemoteValues($record_orig, $record);
