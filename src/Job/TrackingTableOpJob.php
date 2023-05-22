@@ -51,7 +51,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
         $this->trackingTable->reportRecordDeleted($record_orig, TRUE);
       }
       else {
-        $this->trackingTable->reportWriteComplete($record_orig, $record);
+        $this->trackingTable->reportRemoteValues($record_orig, $record);
       }
       // Report the progress increment.
       yield 1;

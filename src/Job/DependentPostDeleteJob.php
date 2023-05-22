@@ -39,7 +39,7 @@ class DependentPostDeleteJob implements ProgressiveJobInterface {
     $q = $this->trackingTable->selectOrphanedDependentKeyCombos($this->relationship);
     $stmt = $q->execute();
     while ($condition = $stmt->fetchAssoc()) {
-      $this->trackingTable->reportRangeDeleted($condition);
+      $this->trackingTable->reportRemoteAbsence($condition);
       // Report the progress increment.
       // @todo Rethink progress calculation for this one.
       yield 1;

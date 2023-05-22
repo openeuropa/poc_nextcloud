@@ -191,7 +191,7 @@ class TrackingTable {
    *   Values of the record that should be updated.
    *   This should not contain the 'pending_operation' key.
    */
-  public function reportWriteComplete(array $condition, array $values_to_update): void {
+  public function reportRemoteValues(array $condition, array $values_to_update): void {
     $values_to_update = array_diff_assoc($values_to_update, $condition);
     $values_to_update['pending_operation'] = Op::UNCHANGED;
     $q = $this->connection->update($this->tableName);
@@ -214,7 +214,7 @@ class TrackingTable {
    * @param array $condition
    *   Condition to determine which records no longer exist.
    */
-  public function reportRangeDeleted(array $condition): void {
+  public function reportRemoteAbsence(array $condition): void {
     // Forget tracking records, that were already marked for deletion.
     $q = $this->connection->delete($this->tableName);
     $q->condition('pending_operation', Op::DELETE);
