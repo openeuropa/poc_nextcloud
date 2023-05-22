@@ -6,7 +6,7 @@ namespace Drupal\poc_nextcloud\Tracking\RecordSubmit;
 
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Exception\FailureResponseException;
-use Drupal\poc_nextcloud\Tracking\Tracker;
+use Drupal\poc_nextcloud\Tracking\Op;
 
 /**
  * Writes queued user data to Nextcloud.
@@ -45,12 +45,12 @@ class NcUserSubmit implements TrackingRecordSubmitInterface {
     ] = $record;
 
     switch ($op) {
-      case Tracker::OP_UPDATE:
+      case Op::UPDATE:
         $this->userEndpoint->setUserEmail($user_id, $email);
         $this->userEndpoint->setUserDisplayName($user_id, $display_name);
         return;
 
-      case Tracker::OP_INSERT:
+      case Op::INSERT:
         try {
           $this->userEndpoint->insertWithEmail(
             $user_id,
@@ -76,7 +76,7 @@ class NcUserSubmit implements TrackingRecordSubmitInterface {
         }
         return;
 
-      case Tracker::OP_DELETE:
+      case Op::DELETE:
         // Delete nc user, if exists.
         if ($this->keepNcUsers) {
           // Do not delete, but still report success.
@@ -86,7 +86,7 @@ class NcUserSubmit implements TrackingRecordSubmitInterface {
         $this->userEndpoint->deleteIfExists($user_id);
         return;
 
-      case Tracker::OP_READ:
+      case Op::READ:
         // Read from Nextcloud instead of writing.
         // @todo Determine if this should be in a separate method or the same.
         $nc_user = $this->userEndpoint->load($user_id);

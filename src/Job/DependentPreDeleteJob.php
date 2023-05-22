@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Job;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\poc_nextcloud\Tracking\Op;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface;
-use Drupal\poc_nextcloud\Tracking\Tracker;
 use Drupal\poc_nextcloud\Tracking\TrackingTable;
 
 /**
@@ -49,7 +49,7 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
     $q = $this->selectObsoleteDependentRecords();
     $stmt = $q->execute();
     while ($record = $stmt->fetchAssoc()) {
-      $this->trackingRecordSubmit->submitTrackingRecord($record, Tracker::OP_DELETE);
+      $this->trackingRecordSubmit->submitTrackingRecord($record, Op::DELETE);
       $this->trackingTable->reportRecordDeleted($record, FALSE);
       // Report the progress increment.
       yield 1;
@@ -73,9 +73,9 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
   private function selectObsoleteDependentRecords(): SelectInterface {
     $q = $this->trackingTable->select('t', $this->relationships);
     // Find records where the source record will be deleted.
-    $q->condition("$this->alias.pending_operation", Tracker::OP_DELETE);
+    $q->condition("$this->alias.pending_operation", Op::DELETE);
     // Find records that actually exist on the remote side.
-    $q->condition("t.pending_operation", Tracker::OP_INSERT, '!=');
+    $q->condition("t.pending_operation", Op::INSERT, '!=');
     return $q;
   }
 

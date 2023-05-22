@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Tracking\RecordSubmit;
 
 use Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint;
-use Drupal\poc_nextcloud\Tracking\Tracker;
+use Drupal\poc_nextcloud\Tracking\Op;
 
 /**
  * Writes pending groups to Nextcloud.
@@ -32,15 +32,15 @@ class NcGroupSubmit implements TrackingRecordSubmitInterface {
     ] = $record;
 
     switch ($op) {
-      case Tracker::OP_UPDATE:
+      case Op::UPDATE:
         $this->groupEndpoint->setDisplayName($group_id, $display_name);
         break;
 
-      case Tracker::OP_INSERT:
+      case Op::INSERT:
         $this->groupEndpoint->insert($group_id, $display_name);
         break;
 
-      case Tracker::OP_DELETE:
+      case Op::DELETE:
         $this->groupEndpoint->delete($group_id);
         break;
 

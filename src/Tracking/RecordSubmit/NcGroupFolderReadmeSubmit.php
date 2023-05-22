@@ -10,7 +10,7 @@ use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
 use Drupal\poc_nextcloud\Endpoint\NxWebdavEndpoint;
 use Drupal\poc_nextcloud\Exception\NextcloudApiException;
-use Drupal\poc_nextcloud\Tracking\Tracker;
+use Drupal\poc_nextcloud\Tracking\Op;
 
 /**
  * Writes pending group folders to Nextcloud.
@@ -50,8 +50,8 @@ class NcGroupFolderReadmeSubmit implements TrackingRecordSubmitInterface {
     ] = $record;
 
     switch ($op) {
-      case Tracker::OP_UPDATE:
-      case Tracker::OP_INSERT:
+      case Op::UPDATE:
+      case Op::INSERT:
         $cancel_tmp_access = $this->giveTemporaryAccess((int) $group_folder_id);
         try {
           $this->webdavEndpoint->writeFile($mount_point . '/README.md', $readme_content);
@@ -61,7 +61,7 @@ class NcGroupFolderReadmeSubmit implements TrackingRecordSubmitInterface {
         }
         break;
 
-      case Tracker::OP_DELETE:
+      case Op::DELETE:
         // The readme will be deleted automatically with the group folder.
         // Nothing to do.
         break;

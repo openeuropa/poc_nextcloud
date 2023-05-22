@@ -11,8 +11,8 @@ use Drupal\poc_nextcloud\Job\DependentPostDeleteJob;
 use Drupal\poc_nextcloud\Job\DependentPreDeleteJob;
 use Drupal\poc_nextcloud\Job\Provider\JobProviderInterface;
 use Drupal\poc_nextcloud\Job\TrackingTableOpJob;
+use Drupal\poc_nextcloud\Tracking\Op;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface;
-use Drupal\poc_nextcloud\Tracking\Tracker;
 use Drupal\poc_nextcloud\Tracking\TrackingTable;
 use Psr\Container\ContainerInterface;
 
@@ -51,7 +51,7 @@ abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterf
    */
   public function selectCurrent(string $alias = 't'): SelectInterface {
     return $this->trackingTable->select($alias, $this->relationships)
-      ->condition($alias . '.pending_operation', Tracker::OP_INSERT, '!=');
+      ->condition($alias . '.pending_operation', Op::INSERT, '!=');
   }
 
   /**
@@ -78,7 +78,7 @@ abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterf
         ));
       }
     }
-    foreach ([[Tracker::OP_DELETE], [Tracker::OP_INSERT, Tracker::OP_UPDATE]] as $phase => $ops) {
+    foreach ([[Op::DELETE], [Op::INSERT, Op::UPDATE]] as $phase => $ops) {
       foreach ($ops as $op) {
         $collector->addJob((bool) $phase, $dependedness, new TrackingTableOpJob(
           $this->trackingTable,

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Tracking\RecordSubmit;
 
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
-use Drupal\poc_nextcloud\Tracking\Tracker;
+use Drupal\poc_nextcloud\Tracking\Op;
 
 /**
  * Writes pending group folders to Nextcloud.
@@ -32,21 +32,21 @@ class NcGroupFolderSubmit implements TrackingRecordSubmitInterface {
     $group_folder_id = (int) $record['nc_group_folder_id'] ?: NULL;
 
     switch ($op) {
-      case Tracker::OP_UPDATE:
+      case Op::UPDATE:
         if ($group_folder_id === NULL) {
           throw new \Exception('Tracking record is missing the group folder id.');
         }
         $this->groupFolderEndpoint->setMountPoint($group_folder_id, $mount_point);
         break;
 
-      case Tracker::OP_INSERT:
+      case Op::INSERT:
         if ($group_folder_id !== NULL) {
           throw new \Exception('Tracking record is marked for insert already has a group folder id.');
         }
         $record['nc_group_folder_id'] = $this->groupFolderEndpoint->insertWithMountPoint($mount_point);
         break;
 
-      case Tracker::OP_DELETE:
+      case Op::DELETE:
         if ($group_folder_id === NULL) {
           throw new \Exception('Tracking record is missing the group folder id.');
         }

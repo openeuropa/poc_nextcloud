@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Job;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\poc_nextcloud\Tracking\Op;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface;
-use Drupal\poc_nextcloud\Tracking\Tracker;
 use Drupal\poc_nextcloud\Tracking\TrackingTable;
 
 /**
@@ -47,7 +47,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
     while ($record = $stmt->fetchAssoc()) {
       $record_orig = $record;
       $this->trackingRecordSubmit->submitTrackingRecord($record, $this->op);
-      if ($this->op === Tracker::OP_DELETE) {
+      if ($this->op === Op::DELETE) {
         $this->trackingTable->reportRecordDeleted($record_orig, TRUE);
       }
       else {

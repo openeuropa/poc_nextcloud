@@ -6,7 +6,7 @@ namespace Drupal\poc_nextcloud\Tracking\RecordSubmit;
 
 use Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint;
 use Drupal\poc_nextcloud\NextcloudConstants;
-use Drupal\poc_nextcloud\Tracking\Tracker;
+use Drupal\poc_nextcloud\Tracking\Op;
 
 /**
  * Submit handler to set access for Nc groups to Nc group folders.
@@ -39,16 +39,16 @@ class NcGroupFolderGroupSubmit implements TrackingRecordSubmitInterface {
     }
 
     switch ($op) {
-      case Tracker::OP_INSERT:
-      case Tracker::OP_UPDATE:
-        if ($op === Tracker::OP_INSERT) {
+      case Op::INSERT:
+      case Op::UPDATE:
+        if ($op === Op::INSERT) {
           $this->groupFolderEndpoint->addGroup($group_folder_id, $group_id);
         }
         $this->groupFolderEndpoint->setGroupPermissions($group_folder_id, $group_id, $permissions & NextcloudConstants::PERMISSION_ALL);
         $this->groupFolderEndpoint->setManageAclGroup($group_folder_id, $group_id, (bool) ($permissions & NextcloudConstants::PERMISSION_ADVANCED));
         break;
 
-      case Tracker::OP_DELETE:
+      case Op::DELETE:
         // Remove the group from the group folder.
         $this->groupFolderEndpoint->removeGroup($group_folder_id, $group_id);
         break;

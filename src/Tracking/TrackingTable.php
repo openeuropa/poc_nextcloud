@@ -74,15 +74,15 @@ class TrackingTable {
       // has not been created yet.
       $q = $this->connection->delete($this->tableName);
       $this->filterQuery($q, $values, '!=');
-      $q->condition('pending_operation', Tracker::OP_INSERT);
+      $q->condition('pending_operation', Op::INSERT);
       $q->execute();
 
       // Queue removal of existing objects with wrong remote key.
       $q = $this->connection->update($this->tableName);
       $this->filterQuery($q, $values, '!=');
       // Don't update records that are already marked for deletion.
-      $q->condition('pending_operation', Tracker::OP_DELETE, '!=');
-      $q->fields(['pending_operation' => Tracker::OP_DELETE]);
+      $q->condition('pending_operation', Op::DELETE, '!=');
+      $q->fields(['pending_operation' => Op::DELETE]);
       $q->execute();
     }
 
@@ -103,7 +103,7 @@ class TrackingTable {
       $this->filterQuery($q, $values);
       // @todo Remove this condition once we implement locking.
       //   There should be no pending deletes, if the table was properly locked.
-      $q->condition('pending_operation', Tracker::OP_DELETE, '!=');
+      $q->condition('pending_operation', Op::DELETE, '!=');
       $n_existing = $q->countQuery()->execute()->fetchField();
       if ($n_existing) {
         return;
@@ -118,8 +118,8 @@ class TrackingTable {
       $q = $this->connection->update($this->tableName);
       $this->filterQuery($q, $values);
       $q->condition('pending_operation', [
-        Tracker::OP_UPDATE,
-        Tracker::OP_INSERT,
+        Op::UPDATE,
+        Op::INSERT,
       ], 'IN');
       $q->fields($values_to_update);
       $n_updated = $q->execute();
@@ -133,8 +133,8 @@ class TrackingTable {
       $q = $this->connection->update($this->tableName);
       $this->filterQuery($q, $values);
       $q = clone $q;
-      $q->condition('pending_operation', Tracker::OP_UNCHANGED);
-      $q->fields(['pending_operation' => Tracker::OP_UPDATE] + $values_to_update);
+      $q->condition('pending_operation', Op::UNCHANGED);
+      $q->fields(['pending_operation' => Op::UPDATE] + $values_to_update);
       $n_updated = $q->execute();
       if ($n_updated) {
         return;
@@ -143,7 +143,7 @@ class TrackingTable {
 
     // Insert new record.
     $values_to_insert = $values;
-    $values_to_insert['pending_operation'] = Tracker::OP_INSERT;
+    $values_to_insert['pending_operation'] = Op::INSERT;
 
     try {
       $this->connection->insert($this->tableName)
@@ -169,15 +169,15 @@ class TrackingTable {
     // Delete matching records that are marked for insert.
     $q = $this->connection->delete($this->tableName);
     $this->filterQueryPartial($q, $condition);
-    $q->condition('pending_operation', Tracker::OP_INSERT);
+    $q->condition('pending_operation', Op::INSERT);
     $q->execute();
 
     // Mark remaining matching records for deletion.
     $q = $this->connection->update($this->tableName);
     $this->filterQueryPartial($q, $condition);
     // Don't update records that are already marked for deletion.
-    $q->condition('pending_operation', Tracker::OP_DELETE, '!=');
-    $q->fields(['pending_operation' => Tracker::OP_DELETE]);
+    $q->condition('pending_operation', Op::DELETE, '!=');
+    $q->fields(['pending_operation' => Op::DELETE]);
     $q->execute();
   }
 
@@ -193,9 +193,9 @@ class TrackingTable {
    */
   public function reportWriteComplete(array $condition, array $values_to_update): void {
     $values_to_update = array_diff_assoc($values_to_update, $condition);
-    $values_to_update['pending_operation'] = Tracker::OP_UNCHANGED;
+    $values_to_update['pending_operation'] = Op::UNCHANGED;
     $q = $this->connection->update($this->tableName);
-    $q->condition('pending_operation', [Tracker::OP_INSERT, Tracker::OP_UPDATE], 'IN');
+    $q->condition('pending_operation', [Op::INSERT, Op::UPDATE], 'IN');
     $this->filterQuery($q, $condition);
     $q->fields($values_to_update);
     $n_updated = $q->execute();
@@ -217,15 +217,15 @@ class TrackingTable {
   public function reportRangeDeleted(array $condition): void {
     // Forget tracking records, that were already marked for deletion.
     $q = $this->connection->delete($this->tableName);
-    $q->condition('pending_operation', Tracker::OP_DELETE);
+    $q->condition('pending_operation', Op::DELETE);
     $this->filterQueryPartial($q, $condition);
     $q->execute();
     // Mark for re-insert, if it was not marked for deletion.
     // This can happen if the target has to be recreated with new keys.
     $q = $this->connection->update($this->tableName);
     $q->condition('pending_operation', [
-      Tracker::OP_INSERT,
-      Tracker::OP_DELETE,
+      Op::INSERT,
+      Op::DELETE,
     ], 'NOT IN');
     $this->filterQueryPartial($q, $condition);
   }
@@ -242,7 +242,7 @@ class TrackingTable {
   public function reportRecordDeleted(array $condition, bool $strict): void {
     // Forget tracking records that were already marked for deletion.
     $q = $this->connection->delete($this->tableName);
-    $q->condition('pending_operation', Tracker::OP_DELETE);
+    $q->condition('pending_operation', Op::DELETE);
     $this->filterQuery($q, $condition);
     $n_deleted = $q->execute();
     if (!$strict) {
@@ -250,8 +250,8 @@ class TrackingTable {
       // This can happen if the target has to be recreated with new keys.
       $q = $this->connection->update($this->tableName);
       $q->condition('pending_operation', [
-        Tracker::OP_INSERT,
-        Tracker::OP_DELETE,
+        Op::INSERT,
+        Op::DELETE,
       ], 'NOT IN');
       $this->filterQuery($q, $condition);
     }
@@ -330,7 +330,7 @@ class TrackingTable {
       $subquery->addField('s', $source_key);
     }
     $q->havingNotExists($subquery);
-    $q->condition('t.pending_operation', Tracker::OP_INSERT, '!=');
+    $q->condition('t.pending_operation', Op::INSERT, '!=');
     return $q;
   }
 
@@ -357,7 +357,7 @@ class TrackingTable {
       foreach ($relationship->getJoinKeys() as $local_key => $source_key) {
         $join_condition->where("$alias.$local_key = $source_alias.$source_key");
       }
-      $join_condition->condition("$source_alias.pending_operation", Tracker::OP_INSERT, '!=');
+      $join_condition->condition("$source_alias.pending_operation", Op::INSERT, '!=');
       $q->addJoin(
         $require_relationships ? 'INNER' : 'LEFT',
         $relationship->getSourceTableName(),

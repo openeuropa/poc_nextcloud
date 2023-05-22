@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Tracking\RecordSubmit;
 
 use Drupal\poc_nextcloud\Endpoint\NxUserEndpoint;
-use Drupal\poc_nextcloud\Tracking\Tracker;
+use Drupal\poc_nextcloud\Tracking\Op;
 
 /**
  * Writes queued user data to Nextcloud.
@@ -33,11 +33,11 @@ class NcUserGroupSubmit implements TrackingRecordSubmitInterface {
 
     // Only support insert and delete. Update is meaningless in this case.
     switch ($op) {
-      case Tracker::OP_INSERT:
+      case Op::INSERT:
         $this->userEndpoint->joinGroup($username, $group_id);
         break;
 
-      case Tracker::OP_DELETE:
+      case Op::DELETE:
         $this->userEndpoint->leaveGroup($username, $group_id);
         break;
     }
