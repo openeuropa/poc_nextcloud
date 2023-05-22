@@ -13,11 +13,11 @@ namespace Drupal\poc_nextcloud\Tracking;
  */
 class Op {
 
-  public const UPDATE = 1;
+  public const UPDATE = 'update';
 
-  public const INSERT = 2;
+  public const INSERT = 'insert';
 
-  public const DELETE = 4;
+  public const DELETE = 'delete';
 
   /**
    * Special operation to read data from Nextcloud.
@@ -25,6 +25,6 @@ class Op {
    * This value does never exist in the database, but some methods accept it as
    * a parameter value.
    */
-  public const READ = 8;
+  public const READ = 'read';
 
 }

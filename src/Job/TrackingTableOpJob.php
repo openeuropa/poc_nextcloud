@@ -23,7 +23,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
    *   Tracking table.
    * @param \Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface $trackingRecordSubmit
    *   Submit handler that writes changes to Nextcloud.
-   * @param int $op
+   * @param string $op
    *   Pending operation to handle in this job.
    *
    * @psalm-param \Drupal\poc_nextcloud\Tracking\TrackingTable<RecordType> $trackingTable
@@ -32,7 +32,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
   public function __construct(
     private TrackingTable $trackingTable,
     private TrackingRecordSubmitInterface $trackingRecordSubmit,
-    private int $op,
+    private string $op,
   ) {}
 
   /**

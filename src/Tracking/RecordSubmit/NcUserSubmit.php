@@ -37,7 +37,7 @@ class NcUserSubmit implements TrackingRecordSubmitInterface {
    *
    * @SuppressWarnings(PHPMD.CyclomaticComplexity)
    */
-  public function submitTrackingRecord(array &$record, int $op): void {
+  public function submitTrackingRecord(array &$record, string $op): void {
     [
       'nc_user_id' => $user_id,
       'nc_email' => &$email,

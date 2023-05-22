@@ -18,7 +18,7 @@ interface TrackingRecordSubmitInterface {
    *   Record from a tracking table.
    *   This is by-reference, allowing the method to alter some values.
    *   This is necessary for auto-increment ids.
-   * @param int $op
+   * @param string $op
    *   Pending operation. Could be insert, update, delete.
    *
    * @psalm-param RecordType $record
@@ -26,6 +26,6 @@ interface TrackingRecordSubmitInterface {
    * @throws \Exception
    *   Failed to write to the Nextcloud instance.
    */
-  public function submitTrackingRecord(array &$record, int $op): void;
+  public function submitTrackingRecord(array &$record, string $op): void;
 
 }

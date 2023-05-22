@@ -25,7 +25,7 @@ class NcUserGroupSubmit implements TrackingRecordSubmitInterface {
   /**
    * {@inheritdoc}
    */
-  public function submitTrackingRecord(array &$record, int $op): void {
+  public function submitTrackingRecord(array &$record, string $op): void {
     [
       'nc_user_id' => $username,
       'nc_group_id' => $group_id,

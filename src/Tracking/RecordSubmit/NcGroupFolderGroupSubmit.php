@@ -26,7 +26,7 @@ class NcGroupFolderGroupSubmit implements TrackingRecordSubmitInterface {
   /**
    * {@inheritdoc}
    */
-  public function submitTrackingRecord(array &$record, int $op): void {
+  public function submitTrackingRecord(array &$record, string $op): void {
     [
       // The group folder id has to come from a table join.
       'nc_group_id' => $group_id,

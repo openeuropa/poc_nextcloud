@@ -25,7 +25,7 @@ class NcGroupFolderSubmit implements TrackingRecordSubmitInterface {
   /**
    * {@inheritdoc}
    */
-  public function submitTrackingRecord(array &$record, int $op): void {
+  public function submitTrackingRecord(array &$record, string $op): void {
     [
       'nc_mount_point' => $mount_point,
     ] = $record;
