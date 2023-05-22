@@ -23,8 +23,6 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
    *   Tracking table.
    * @param \Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface $trackingRecordSubmit
    *   Submit handler that writes changes to Nextcloud.
-   * @param \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship[] $relationships
-   *   Other tracking tables this table depends on, by alias.
    * @param int $op
    *   Pending operation to handle in this job.
    *
@@ -34,7 +32,6 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
   public function __construct(
     private TrackingTable $trackingTable,
     private TrackingRecordSubmitInterface $trackingRecordSubmit,
-    private array $relationships,
     private int $op,
   ) {}
 
@@ -73,7 +70,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
    *   Select query.
    */
   private function selectPendingRecords(): SelectInterface {
-    $q = $this->trackingTable->select('t', $this->relationships);
+    $q = $this->trackingTable->select();
 
     $q->condition('t.pending_operation', $this->op);
     return $q;

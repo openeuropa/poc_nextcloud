@@ -7,6 +7,11 @@ namespace Drupal\poc_nextcloud\Tracking;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\ConditionInterface;
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\poc_nextcloud\Job\Collector\JobCollectorInterface;
+use Drupal\poc_nextcloud\Job\DependentPostDeleteJob;
+use Drupal\poc_nextcloud\Job\DependentPreDeleteJob;
+use Drupal\poc_nextcloud\Job\TrackingTableOpJob;
+use Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface;
 
 /**
  * Object to control a database table to track pending writes to Nextcloud.
@@ -16,26 +21,139 @@ use Drupal\Core\Database\Query\SelectInterface;
 class TrackingTable {
 
   /**
+   * The 'fields' part of the table schema.
+   *
+   * @var array[]
+   */
+  private array $schemaFields = [
+    'pending_hash' => [
+      'description' => 'Hash of the values to be written to the remote, or NULL if object should not exist in the remote.',
+      'type' => 'varchar',
+      'length' => 254,
+    ],
+    'remote_hash' => [
+      'description' => 'Hash of the values currently in the remote, or NULL if object does not exist in the remote.',
+      'type' => 'varchar',
+      'length' => 254,
+    ],
+  ];
+
+  /**
+   * Primary key. Array keys are the same as the values.
+   *
+   * @var string[]
+   */
+  private array $primaryKey = [];
+
+  /**
+   * Local part of the primary key. Array keys are the same as the values.
+   *
+   * @var string[]
+   */
+  private array $localKey = [];
+
+  /**
+   * Remote part of the primary key. Array keys are the same as the values.
+   *
+   * @var string[]
+   */
+  private array $remoteKey = [];
+
+  /**
+   * Field names of data fields. Array keys are the same as the values.
+   *
+   * @var string[]
+   */
+  private array $dataFields = [];
+
+  /**
+   * Parent table relationships, by alias.
+   *
+   * @var \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship[]
+   */
+  private array $relationships = [];
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $connection
    *   Database connection.
    * @param string $tableName
    *   Table name.
-   * @param string[] $localKey
-   *   Local part of the primary key.
-   * @param array $remoteKey
-   *   Remote part of the primary key.
-   * @param bool $hasDataFields
-   *   TRUE, if the table has any fields beyond the primary key.
    */
   public function __construct(
     private Connection $connection,
     private string $tableName,
-    private array $localKey,
-    private array $remoteKey,
-    private bool $hasDataFields,
   ) {}
+
+  /**
+   * Adds a column that is part of the local primary key.
+   *
+   * Usually this is an entity id in Drupal.
+   *
+   * @param string $key
+   *   Column name.
+   * @param array $schema
+   *   Table schema.
+   *
+   * @return $this
+   */
+  public function addLocalPrimaryField(string $key, array $schema): static {
+    $this->localKey[$key] = $key;
+    $this->primaryKey[$key] = $key;
+    $this->schemaFields[$key] = $schema;
+    return $this;
+  }
+
+  /**
+   * Adds a column that is part of the remote primary key.
+   *
+   * This is usually an object id in Nextcloud.
+   *
+   * @param string $key
+   *   Column name.
+   * @param array $schema
+   *   Field schema.
+   *
+   * @return $this
+   */
+  public function addRemotePrimaryField(string $key, array $schema): static {
+    $this->remoteKey[$key] = $key;
+    $this->primaryKey[$key] = $key;
+    $this->schemaFields[$key] = $schema;
+    return $this;
+  }
+
+  /**
+   * Adds a parent table relationship.
+   *
+   * @param string $alias
+   *   Alias for the relationship.
+   * @param \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship $relationship
+   *   Relationship.
+   *
+   * @return $this
+   */
+  public function addParentTableRelationship(string $alias, TrackingTableRelationship $relationship): static {
+    $this->relationships[$alias] = $relationship;
+    return $this;
+  }
+
+  /**
+   * Adds a data field.
+   *
+   * @param string $key
+   *   Column name.
+   * @param array $schema
+   *   Field schema.
+   *
+   * @return $this
+   */
+  public function addDataField(string $key, array $schema): static {
+    $this->dataFields[$key] = $key;
+    $this->schemaFields[$key] = $schema;
+    return $this;
+  }
 
   /**
    * Gets the table name.
@@ -48,13 +166,16 @@ class TrackingTable {
   }
 
   /**
-   * Gets the primary key.
+   * Gets a table schema for hook_schema().
    *
-   * @return string[]
-   *   Column names of the primary key.
+   * @return array
+   *   Table schema.
    */
-  public function getPrimaryKey(): array {
-    return [...$this->localKey, ...$this->remoteKey];
+  public function getTableSchema(): array {
+    return [
+      'fields' => $this->schemaFields,
+      'primary key' => array_keys($this->primaryKey),
+    ];
   }
 
   /**
@@ -89,10 +210,10 @@ class TrackingTable {
     // Update existing records with correct remote key.
     $values_to_update = array_diff_key(
       $values,
-      array_fill_keys($this->getPrimaryKey(), TRUE),
+      $this->primaryKey,
     );
 
-    if (!$this->hasDataFields) {
+    if (!$this->dataFields) {
       if ($values_to_update) {
         throw new \InvalidArgumentException('Values to update must be empty on a table without data fields.');
       }
@@ -182,6 +303,45 @@ class TrackingTable {
   }
 
   /**
+   * Collects the jobs to write the tracked changes to the remote end.
+   *
+   * This has a few additional parameters than the similar interface method.
+   *
+   * @param \Drupal\poc_nextcloud\Job\Collector\JobCollectorInterface $collector
+   *   Job collector.
+   * @param \Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface $submit
+   *   Submit handler that writes the changes to Nextcloud.
+   */
+  public function collectJobs(JobCollectorInterface $collector, TrackingRecordSubmitInterface $submit): void {
+    // @todo More sophisticated way to determine order.
+    $dependency_level ??= ($this->relationships ? 10 : 0);
+    foreach ($this->relationships as $alias => $relationship) {
+      if ($relationship->isAutoDelete()) {
+        $collector->addJob(FALSE, $dependency_level, new DependentPostDeleteJob(
+          $this,
+          $relationship,
+        ));
+      }
+      else {
+        $collector->addJob(FALSE, -$dependency_level, new DependentPreDeleteJob(
+          $this,
+          $submit,
+          $alias,
+        ));
+      }
+    }
+    foreach ([[Op::DELETE], [Op::INSERT, Op::UPDATE]] as $phase => $ops) {
+      foreach ($ops as $op) {
+        $collector->addJob((bool) $phase, $dependency_level, new TrackingTableOpJob(
+          $this,
+          $submit,
+          $op,
+        ));
+      }
+    }
+  }
+
+  /**
    * Reports that a record has been written to Nextcloud and is now "synced".
    *
    * @param array $condition
@@ -239,7 +399,7 @@ class TrackingTable {
    *   An array with values for some of the local primary key columns.
    */
   private function filterQueryPartial(ConditionInterface $query, array $values): void {
-    foreach (array_intersect_key($values, array_fill_keys($this->localKey, TRUE)) as $k => $v) {
+    foreach (array_intersect_key($values, $this->localKey) as $k => $v) {
       $query->condition($k, $v);
     }
   }
@@ -322,7 +482,7 @@ class TrackingTable {
   public function select(string $alias = 't', array $relationships = [], bool $require_relationships = TRUE): SelectInterface {
     $q = $this->connection->select($this->tableName, $alias);
     $q->fields($alias);
-    foreach ($relationships as $source_alias => $relationship) {
+    foreach ($this->relationships as $source_alias => $relationship) {
       $join_condition = $q->andConditionGroup();
       foreach ($relationship->getJoinKeys() as $local_key => $source_key) {
         $join_condition->where("$alias.$local_key = $source_alias.$source_key");

@@ -30,28 +30,16 @@ class TrackingTableFactory {
    *
    * @param string $table_name
    *   Table name.
-   * @param string[] $local_key
-   *   Local primary key columns.
-   * @param string[] $remote_key
-   *   Remote primary key columns.
-   * @param bool $has_data_fields
-   *   TRUE, if the table has any fields beyond the primary key.
    *
    * @return \Drupal\poc_nextcloud\Tracking\TrackingTable
    *   Newly created tracking table.
    */
   public function create(
     string $table_name,
-    array $local_key,
-    array $remote_key = [],
-    bool $has_data_fields = TRUE,
   ): TrackingTable {
     return new TrackingTable(
       $this->connection,
       $table_name,
-      $local_key,
-      $remote_key,
-      $has_data_fields,
     );
   }
 

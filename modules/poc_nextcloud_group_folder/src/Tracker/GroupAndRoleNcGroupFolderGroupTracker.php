@@ -38,26 +38,39 @@ class GroupAndRoleNcGroupFolderGroupTracker extends TrackerBase {
   ) {
     parent::__construct(
       NcGroupFolderGroupSubmit::class,
-      $trackingTableFactory->create(
-        self::TABLE_NAME,
-        ['gid', 'group_role_id'],
-      ),
-      [
-        'gf' => new TrackingTableRelationship(
+      $trackingTableFactory->create(self::TABLE_NAME)
+        ->addLocalPrimaryField('gid', [
+          'description' => 'Drupal group id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addLocalPrimaryField('group_role_id', [
+          'description' => 'Drupal group role id',
+          'type' => 'varchar',
+          'length' => 254,
+          'not null' => TRUE,
+        ])
+        ->addDataField('nc_permissions', [
+          'description' => 'Permissions bitmask for read, write, share, acl.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addParentTableRelationship('gf', new TrackingTableRelationship(
           GroupNcGroupFolderTracker::TABLE_NAME,
           ['gid' => 'gid'],
           ['nc_group_folder_id'],
           // @todo Check if auto delete really works in this case.
           TRUE,
-        ),
-        'g' => new TrackingTableRelationship(
+        ))
+        ->addParentTableRelationship('g', new TrackingTableRelationship(
           GroupAndRoleNcGroupTracker::TABLE_NAME,
           ['gid' => 'gid', 'group_role_id' => 'group_role_id'],
           ['nc_group_id'],
           // @todo Check if auto delete really works in this case.
           TRUE,
-        ),
-      ],
+        )),
     );
   }
 
@@ -161,32 +174,6 @@ class GroupAndRoleNcGroupFolderGroupTracker extends TrackerBase {
         ]);
       }
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function alterTableSchema(array &$table_schema): void {
-    $table_schema['fields'] += [
-      'gid' => [
-        'description' => 'Drupal group id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'group_role_id' => [
-        'description' => 'Drupal group role id',
-        'type' => 'varchar',
-        'length' => 254,
-        'not null' => TRUE,
-      ],
-      'nc_permissions' => [
-        'description' => 'Permissions bitmask for read, write, share, acl.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-    ];
   }
 
 }

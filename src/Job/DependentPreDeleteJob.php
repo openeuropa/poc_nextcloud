@@ -26,8 +26,6 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
    *   Tracking table.
    * @param \Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface $trackingRecordSubmit
    *   Submit handler.
-   * @param \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship[] $relationships
-   *   Other tracking tables this table depends on, by alias.
    * @param string $alias
    *   Alias for the specific dependency table.
    *
@@ -37,7 +35,6 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
   public function __construct(
     private TrackingTable $trackingTable,
     private TrackingRecordSubmitInterface $trackingRecordSubmit,
-    private array $relationships,
     private string $alias,
   ) {}
 
@@ -71,7 +68,7 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
    *   Select query.
    */
   private function selectObsoleteDependentRecords(): SelectInterface {
-    $q = $this->trackingTable->select('t', $this->relationships);
+    $q = $this->trackingTable->select();
     // Find records where the source record will be deleted.
     $q->condition("$this->alias.pending_operation", Op::DELETE);
     // Find records that actually exist on the remote side.

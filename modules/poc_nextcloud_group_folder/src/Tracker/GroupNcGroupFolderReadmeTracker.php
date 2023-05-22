@@ -29,18 +29,25 @@ class GroupNcGroupFolderReadmeTracker extends TrackerBase {
   ) {
     parent::__construct(
       NcGroupFolderReadmeSubmit::class,
-      $trackingTableFactory->create(
-        self::TABLE_NAME,
-        ['gid'],
-      ),
-      [
-        'g' => new TrackingTableRelationship(
+      $trackingTableFactory->create(self::TABLE_NAME)
+        ->addLocalPrimaryField('gid', [
+          'description' => 'Drupal group id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addDataField('nc_readme_content', [
+          'description' => 'Content of a README.md for a group folder.',
+          'type' => 'text',
+          'size' => 'normal',
+          'not null' => FALSE,
+        ])
+        ->addParentTableRelationship('g', new TrackingTableRelationship(
           GroupNcGroupFolderTracker::TABLE_NAME,
           ['gid' => 'gid'],
           ['nc_group_folder_id', 'nc_mount_point'],
           TRUE,
-        ),
-      ],
+        )),
     );
   }
 
@@ -81,26 +88,6 @@ class GroupNcGroupFolderReadmeTracker extends TrackerBase {
         $group->toUrl()->setAbsolute()->toString(),
       ),
     ]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function alterTableSchema(array &$table_schema): void {
-    $table_schema['fields'] += [
-      'gid' => [
-        'description' => 'Drupal group id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'nc_readme_content' => [
-        'description' => 'Content of a README.md for a group folder.',
-        'type' => 'text',
-        'size' => 'normal',
-        'not null' => FALSE,
-      ],
-    ];
   }
 
 }

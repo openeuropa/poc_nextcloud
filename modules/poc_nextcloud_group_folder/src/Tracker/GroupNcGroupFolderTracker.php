@@ -28,10 +28,25 @@ class GroupNcGroupFolderTracker extends TrackerBase {
   ) {
     parent::__construct(
       NcGroupFolderSubmit::class,
-      $trackingTableFactory->create(
-        self::TABLE_NAME,
-        ['gid'],
-      ),
+      $trackingTableFactory->create(self::TABLE_NAME)
+        ->addLocalPrimaryField('gid', [
+          'description' => 'Drupal group id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addDataField('nc_group_folder_id', [
+          'description' => 'Nextcloud group folder id, or NULL if not created yet.',
+          'type' => 'int',
+          'unsigned' => TRUE,
+        ])
+        ->addDataField('nc_mount_point', [
+          'description' => 'Nextcloud group folder mount point',
+          'type' => 'varchar',
+          // Display name length as in Nextcloud database.
+          'length' => 64,
+          'not null' => TRUE,
+        ]),
     );
   }
 
@@ -64,34 +79,6 @@ class GroupNcGroupFolderTracker extends TrackerBase {
       'gid' => $group->id(),
       'nc_mount_point' => $nc_mount_point,
     ]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function alterTableSchema(array &$table_schema): void {
-    $table_schema['fields'] += [
-      'gid' => [
-        'description' => 'Drupal group id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      // The group folder id is filled in once the group folder is created in
-      // Nextcloud.
-      'nc_group_folder_id' => [
-        'description' => 'Nextcloud group folder id, or NULL if not created yet.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-      ],
-      'nc_mount_point' => [
-        'description' => 'Nextcloud group folder mount point',
-        'type' => 'varchar',
-        // Display name length as in Nextcloud database.
-        'length' => 64,
-        'not null' => TRUE,
-      ],
-    ];
   }
 
 }

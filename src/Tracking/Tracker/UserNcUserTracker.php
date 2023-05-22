@@ -27,11 +27,33 @@ class UserNcUserTracker extends TrackerBase {
   ) {
     parent::__construct(
       NcUserSubmit::class,
-      $trackingTableFactory->create(
-        self::TABLE_NAME,
-        ['uid'],
-        ['nc_user_id'],
-      ),
+      $trackingTableFactory->create(self::TABLE_NAME)
+        ->addLocalPrimaryField('uid', [
+          'description' => 'Drupal user id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addRemotePrimaryField('nc_user_id', [
+          'description' => 'Nextcloud user id',
+          'type' => 'varchar_ascii',
+          // User id length as in Nextcloud database.
+          'length' => 64,
+          'not null' => TRUE,
+        ])
+        ->addDataField('nc_email', [
+          'type' => 'varchar',
+          // Email length as in Drupal.
+          // In Nextcloud this is stored in a serialized blob with other values.
+          'length' => 254,
+          'not null' => TRUE,
+        ])
+        ->addDataField('nc_display_name', [
+          'type' => 'varchar',
+          // Display name length as in Nextcloud database.
+          'length' => 64,
+          'not null' => TRUE,
+        ]),
     );
   }
 
@@ -116,40 +138,6 @@ class UserNcUserTracker extends TrackerBase {
       return FALSE;
     }
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function alterTableSchema(array &$table_schema): void {
-    $table_schema['fields'] += [
-      'uid' => [
-        'description' => 'Drupal user id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'nc_user_id' => [
-        'description' => 'Nextcloud user id',
-        'type' => 'varchar_ascii',
-        // User id length as in Nextcloud database.
-        'length' => 64,
-        'not null' => TRUE,
-      ],
-      'nc_email' => [
-        'type' => 'varchar',
-        // Email length as in Drupal.
-        // In Nextcloud this is stored in a serialized blob with other values.
-        'length' => 254,
-        'not null' => TRUE,
-      ],
-      'nc_display_name' => [
-        'type' => 'varchar',
-        // Display name length as in Nextcloud database.
-        'length' => 64,
-        'not null' => TRUE,
-      ],
-    ];
   }
 
 }

@@ -35,11 +35,33 @@ class GroupAndRoleNcGroupTracker extends TrackerBase {
   ) {
     parent::__construct(
       NcGroupSubmit::class,
-      $trackingTableFactory->create(
-        self::TABLE_NAME,
-        ['gid', 'group_role_id'],
-        ['nc_group_id'],
-      ),
+      $trackingTableFactory->create(self::TABLE_NAME)
+        ->addLocalPrimaryField('gid', [
+          'description' => 'Drupal group id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addLocalPrimaryField('group_role_id', [
+          'description' => 'Drupal group role id',
+          'type' => 'varchar',
+          'length' => 254,
+          'not null' => TRUE,
+        ])
+        ->addRemotePrimaryField('nc_group_id', [
+          'description' => 'Nextcloud group id',
+          'type' => 'varchar',
+          // Id length as in Nextcloud database.
+          'length' => 64,
+          'not null' => TRUE,
+        ])
+        ->addDataField('nc_display_name', [
+          'description' => 'Nextcloud group display name',
+          'type' => 'varchar',
+          // Display name length as in Nextcloud database.
+          'length' => 255,
+          'not null' => TRUE,
+        ]),
     );
   }
 
@@ -163,40 +185,6 @@ class GroupAndRoleNcGroupTracker extends TrackerBase {
       GroupFolderConstants::PERMISSIONS_MAP,
       $group_role->getPermissions(),
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function alterTableSchema(array &$table_schema): void {
-    $table_schema['fields'] += [
-      'gid' => [
-        'description' => 'Drupal group id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'group_role_id' => [
-        'description' => 'Drupal group role id',
-        'type' => 'varchar',
-        'length' => 254,
-        'not null' => TRUE,
-      ],
-      'nc_group_id' => [
-        'description' => 'Nextcloud group id',
-        'type' => 'varchar',
-        // Id length as in Nextcloud database.
-        'length' => 64,
-        'not null' => TRUE,
-      ],
-      'nc_display_name' => [
-        'description' => 'Nextcloud group display name',
-        'type' => 'varchar',
-        // Display name length as in Nextcloud database.
-        'length' => 255,
-        'not null' => TRUE,
-      ],
-    ];
   }
 
 }

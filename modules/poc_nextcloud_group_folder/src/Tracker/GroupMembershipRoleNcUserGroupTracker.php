@@ -33,24 +33,35 @@ class GroupMembershipRoleNcUserGroupTracker extends TrackerBase {
   ) {
     parent::__construct(
       NcUserGroupSubmit::class,
-      $trackingTableFactory->create(
-        self::TABLE_NAME,
-        ['uid', 'gid', 'group_role_id'],
-        [],
-        FALSE,
-      ),
-      [
-        'u' => new TrackingTableRelationship(
+      $trackingTableFactory->create(self::TABLE_NAME)
+        ->addLocalPrimaryField('uid', [
+          'description' => 'Drupal user id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addLocalPrimaryField('gid', [
+          'description' => 'Drupal group id',
+          'type' => 'int',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ])
+        ->addLocalPrimaryField('group_role_id', [
+          'description' => 'Drupal group role id',
+          'type' => 'varchar',
+          'length' => 254,
+          'not null' => TRUE,
+        ])
+        ->addParentTableRelationship('u', new TrackingTableRelationship(
           UserNcUserTracker::TABLE_NAME,
           ['uid' => 'uid'],
           ['nc_user_id'],
-        ),
-        'g' => new TrackingTableRelationship(
+        ))
+        ->addParentTableRelationship('g', new TrackingTableRelationship(
           GroupAndRoleNcGroupTracker::TABLE_NAME,
           ['gid' => 'gid', 'group_role_id' => 'group_role_id'],
           ['nc_group_id'],
-        ),
-      ],
+        )),
     );
   }
 
@@ -127,32 +138,6 @@ class GroupMembershipRoleNcUserGroupTracker extends TrackerBase {
         $condition + ['group_role_id' => $role->id()],
       );
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function alterTableSchema(array &$table_schema): void {
-    $table_schema['fields'] += [
-      'uid' => [
-        'description' => 'Drupal user id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'gid' => [
-        'description' => 'Drupal group id',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ],
-      'group_role_id' => [
-        'description' => 'Drupal group role id',
-        'type' => 'varchar',
-        'length' => 254,
-        'not null' => TRUE,
-      ],
-    ];
   }
 
 }
