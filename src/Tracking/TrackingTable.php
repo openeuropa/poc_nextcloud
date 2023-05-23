@@ -194,13 +194,13 @@ class TrackingTable {
       // Delete tracking records with wrong remote key, where the remote object
       // has not been created yet.
       $q = $this->connection->delete($this->tableName);
-      $this->filterQuery($q, $values, '!=');
+      $this->filterQuery($q, $values, TRUE);
       $q->condition('pending_operation', Op::INSERT);
       $q->execute();
 
       // Queue removal of existing objects with wrong remote key.
       $q = $this->connection->update($this->tableName);
-      $this->filterQuery($q, $values, '!=');
+      $this->filterQuery($q, $values, TRUE);
       // Don't update records that are already marked for deletion.
       $q->condition('pending_operation', Op::DELETE, '!=');
       $q->fields(['pending_operation' => Op::DELETE]);
@@ -412,20 +412,20 @@ class TrackingTable {
    * @param array $values
    *   A full record, or an array with values for at least all the primary key
    *   columns.
-   * @param string|null $remote_key_comparator
-   *   Comparison operator for remote keys.
+   * @param bool $negate_remote_key
+   *   TRUE to negate the condition for the remote key.
    */
-  private function filterQuery(ConditionInterface $query, array $values, ?string $remote_key_comparator = '='): void {
+  private function filterQuery(ConditionInterface $query, array $values, bool $negate_remote_key = FALSE): void {
     foreach ($this->localKey as $k) {
       $query->condition($k, $values[$k] ?? throw new \InvalidArgumentException("Missing value for '$k'."));
     }
-    if ($remote_key_comparator === '=') {
+    if (!$negate_remote_key) {
       // Find records where the remote key also matches.
       foreach ($this->remoteKey as $k) {
         $query->condition($k, $values[$k] ?? throw new \InvalidArgumentException("Missing value for '$k'."));
       }
     }
-    elseif ($remote_key_comparator === '!=') {
+    else {
       if (!$this->remoteKey) {
         throw new \RuntimeException('Cannot apply negated remote key conditions, if remote key is empty.');
       }
