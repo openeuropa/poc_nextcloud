@@ -35,7 +35,12 @@ final class StateValueStore implements ValueStoreInterface {
    * {@inheritdoc}
    */
   public function set(mixed $value): void {
-    $this->state->set($this->key, $value);
+    if ($value !== NULL) {
+      $this->state->set($this->key, $value);
+    }
+    else {
+      $this->state->delete($this->key);
+    }
   }
 
 }

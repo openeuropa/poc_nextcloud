@@ -29,7 +29,7 @@ interface ValueStoreInterface {
    * Sets the value.
    *
    * @param mixed $value
-   *   New value.
+   *   New value, or NULL to unset/delete.
    *
    * @throws \Drupal\poc_nextcloud\Exception\ValueException
    *   Value cannot be written.
