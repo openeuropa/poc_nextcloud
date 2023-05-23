@@ -56,7 +56,7 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPendingWorkloadSize(): float|int|null {
+  public function estimate(): float|int|null {
     $q = $this->selectObsoleteDependentRecords();
     // If no results, this can be skipped.
     return (int) $q->countQuery()->execute()->fetchField() ?: NULL;

@@ -32,7 +32,7 @@ class PocNextcloudCommands extends DrushCommands {
    * @throws \Exception
    */
   public function runJob(): void {
-    $total = $this->job->getPendingWorkloadSize();
+    $total = $this->job->estimate();
     print "Pending: $total.\n";
     $remaining = $total;
     foreach ($this->job->run() as $delta) {

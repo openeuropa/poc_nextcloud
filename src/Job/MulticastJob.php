@@ -40,11 +40,11 @@ class MulticastJob implements ProgressiveJobInterface {
   public function run(): \Iterator {
     $estimates = [];
     foreach ($this->jobs as $delta => $job) {
-      $estimates[$delta] = $job->getPendingWorkloadSize();
+      $estimates[$delta] = $job->estimate();
     }
     foreach ($this->jobs as $delta => $job) {
       $original_estimate = $estimates[$delta];
-      $current_estimate = $job->getPendingWorkloadSize();
+      $current_estimate = $job->estimate();
       if (!$current_estimate || abs($current_estimate) < 0.0001) {
         // Don't divide by zero, not even a zero-ish float.
         $factor = 0;
@@ -68,11 +68,11 @@ class MulticastJob implements ProgressiveJobInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPendingWorkloadSize(): float|int|null {
+  public function estimate(): float|int|null {
     $sum = 0;
     $skippable = TRUE;
     foreach ($this->jobs as $job) {
-      $size = $job->getPendingWorkloadSize();
+      $size = $job->estimate();
       if ($size !== NULL) {
         $sum += $size;
         $skippable = FALSE;

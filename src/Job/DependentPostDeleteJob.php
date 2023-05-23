@@ -49,7 +49,7 @@ class DependentPostDeleteJob implements ProgressiveJobInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPendingWorkloadSize(): float|int|null {
+  public function estimate(): float|int|null {
     // @todo This calculation changes after other jobs have run.
     $q = $this->trackingTable->selectOrphanedDependentKeyCombos($this->relationship);
     // If no results, this can be skipped.

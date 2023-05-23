@@ -38,6 +38,6 @@ interface ProgressiveJobInterface {
    *   NULL if the job does not need to be run at all.
    *   Note that the result can change after other jobs have run.
    */
-  public function getPendingWorkloadSize(): float|int|null;
+  public function estimate(): float|int|null;
 
 }
