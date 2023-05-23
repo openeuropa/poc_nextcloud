@@ -70,9 +70,9 @@ class DependentPreDeleteJob implements ProgressiveJobInterface {
   private function selectObsoleteDependentRecords(): SelectInterface {
     $q = $this->trackingTable->select();
     // Find records where the source record will be deleted.
-    $q->condition("$this->alias.pending_operation", Op::DELETE);
+    $q->isNull("$this->alias.pending_hash");
     // Find records that actually exist on the remote side.
-    $q->condition("t.pending_operation", Op::INSERT, '!=');
+    $q->isNotNull('t.remote_hash');
     return $q;
   }
 

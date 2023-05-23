@@ -13,8 +13,6 @@ namespace Drupal\poc_nextcloud\Tracking;
  */
 class Op {
 
-  public const UNCHANGED = 0;
-
   public const UPDATE = 1;
 
   public const INSERT = 2;

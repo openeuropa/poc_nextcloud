@@ -67,6 +67,17 @@ class TrackingTable {
   private array $dataFields = [];
 
   /**
+   * Fields that get their value from the remote.
+   *
+   * E.g. auto-increment ids or uuids generated in Nextcloud.
+   *
+   * Array keys are the same as the values.
+   *
+   * @var string[]
+   */
+  private array $remoteControlledFields = [];
+
+  /**
    * Parent table relationships, by alias.
    *
    * @var \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship[]
@@ -120,6 +131,22 @@ class TrackingTable {
   public function addRemotePrimaryField(string $key, array $schema): static {
     $this->remoteKey[$key] = $key;
     $this->primaryKey[$key] = $key;
+    $this->schemaFields[$key] = $schema;
+    return $this;
+  }
+
+  /**
+   * Adds a field that gets its value from the remote.
+   *
+   * @param string $key
+   *   Column name.
+   * @param array $schema
+   *   Field schema.
+   *
+   * @return $this
+   */
+  public function addRemoteControlledField(string $key, array $schema): static {
+    $this->remoteControlledFields[$key] = $key;
     $this->schemaFields[$key] = $schema;
     return $this;
   }
@@ -187,84 +214,52 @@ class TrackingTable {
    * @psalm-param RecordType $values
    */
   public function queueWrite(array $values): void {
-    // Prevent calling code from overwriting the pending operation value.
-    unset($values['pending_operation']);
+    // Prevent calling code from overwriting reserved fields.
+    unset($values['pending_hash'], $values['remote_hash']);
 
     if ($this->remoteKey) {
       // Delete tracking records with wrong remote key, where the remote object
       // has not been created yet.
       $q = $this->connection->delete($this->tableName);
       $this->filterQuery($q, $values, TRUE);
-      $q->condition('pending_operation', Op::INSERT);
+      $q->isNull('remote_hash');
       $q->execute();
 
       // Queue removal of existing objects with wrong remote key.
       $q = $this->connection->update($this->tableName);
       $this->filterQuery($q, $values, TRUE);
-      // Don't update records that are already marked for deletion.
-      $q->condition('pending_operation', Op::DELETE, '!=');
-      $q->fields(['pending_operation' => Op::DELETE]);
+      // Don't produce records that have NULL for both hashes.
+      // @todo Remove this condition once a lock is introduced.
+      $q->isNotNull('remote_hash');
+      $q->fields(['pending_hash' => NULL]);
       $q->execute();
     }
 
     // Update existing records with correct remote key.
-    $values_to_update = array_diff_key(
-      $values,
-      $this->primaryKey,
-    );
-
-    if (!$this->dataFields) {
-      if ($values_to_update) {
-        throw new \InvalidArgumentException('Values to update must be empty on a table without data fields.');
-      }
-      // This is a special case, where the entire table consists of the primary
-      // key.
-      // @todo Make this a configuration in the object itself.
-      $q = $this->connection->select($this->tableName, 't');
-      $this->filterQuery($q, $values);
-      // @todo Remove this condition once we implement locking.
-      //   There should be no pending deletes, if the table was properly locked.
-      $q->condition('pending_operation', Op::DELETE, '!=');
-      $n_existing = $q->countQuery()->execute()->fetchField();
-      if ($n_existing) {
-        return;
-      }
+    $values_to_update = array_intersect_key($values, $this->dataFields);
+    $missing_keys = array_diff_key($this->dataFields, $values);
+    if ($missing_keys) {
+      throw new \InvalidArgumentException(sprintf(
+        'Missing data fields %s.',
+        implode(', ', array_keys($missing_keys)),
+      ));
     }
-    else {
-      if (!$values_to_update) {
-        throw new \InvalidArgumentException('Values to update must not be empty on a table with data fields.');
-      }
+    $hash = $this->hashValues($values_to_update);
+    $values_to_update['pending_hash'] = $hash;
 
-      // Update records that already have a pending insert or update.
-      $q = $this->connection->update($this->tableName);
-      $this->filterQuery($q, $values);
-      $q->condition('pending_operation', [
-        Op::UPDATE,
-        Op::INSERT,
-      ], 'IN');
-      $q->fields($values_to_update);
-      $n_updated = $q->execute();
-      if ($n_updated) {
-        return;
-      }
-
-      // Update records that don't have a pending operation.
-      // @todo Introduce a checksum to avoid marking records for update that have
-      //   no change.
-      $q = $this->connection->update($this->tableName);
-      $this->filterQuery($q, $values);
-      $q = clone $q;
-      $q->condition('pending_operation', Op::UNCHANGED);
-      $q->fields(['pending_operation' => Op::UPDATE] + $values_to_update);
-      $n_updated = $q->execute();
-      if ($n_updated) {
-        return;
-      }
+    // Update existing records.
+    $q = $this->connection->update($this->tableName);
+    $this->filterQuery($q, $values);
+    $q->fields($values_to_update);
+    $n_updated = $q->execute();
+    if ($n_updated) {
+      return;
     }
 
     // Insert new record.
     $values_to_insert = $values;
-    $values_to_insert['pending_operation'] = Op::INSERT;
+    $values_to_insert['pending_hash'] = $hash;
+    $values_to_insert['remote_hash'] = NULL;
 
     try {
       $this->connection->insert($this->tableName)
@@ -289,16 +284,17 @@ class TrackingTable {
   public function queueDelete(array $condition): void {
     // Delete matching records that are marked for insert.
     $q = $this->connection->delete($this->tableName);
+    self::addQueryConditions($q, $this->localKey, $condition, FALSE);
     $this->filterQueryPartial($q, $condition);
-    $q->condition('pending_operation', Op::INSERT);
+    $q->isNull('remote_hash');
     $q->execute();
 
     // Mark remaining matching records for deletion.
     $q = $this->connection->update($this->tableName);
-    $this->filterQueryPartial($q, $condition);
-    // Don't update records that are already marked for deletion.
-    $q->condition('pending_operation', Op::DELETE, '!=');
-    $q->fields(['pending_operation' => Op::DELETE]);
+    self::addQueryConditions($q, $this->localKey, $condition, FALSE);
+    // Do not create records with NULL for both hashes.
+    $q->isNotNull('remote_hash');
+    $q->fields(['pending_hash' => NULL]);
     $q->execute();
   }
 
@@ -311,6 +307,8 @@ class TrackingTable {
    *   Job collector.
    * @param \Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface $submit
    *   Submit handler that writes the changes to Nextcloud.
+   *
+   * @see \Drupal\poc_nextcloud\Job\Provider\JobProviderInterface::collectJobs()
    */
   public function collectJobs(JobCollectorInterface $collector, TrackingRecordSubmitInterface $submit): void {
     // @todo More sophisticated way to determine order.
@@ -342,52 +340,77 @@ class TrackingTable {
   }
 
   /**
-   * Reports that a record has been written to Nextcloud and is now "synced".
+   * Reports values currently in the remote.
    *
-   * @param array $condition
-   *   Array with at least all values for the primary key.
-   *   This can simply be the old version of the record.
-   * @param array $values_to_update
-   *   Values of the record that should be updated.
-   *   This should not contain the 'pending_operation' key.
+   * This is called in the following scenarios:
+   * - A remote object was just updated or created.
+   * - A checkup script finds a remote object.
+   *
+   * @param array $values
+   *   Values of the remote object.
    */
-  public function reportRemoteValues(array $condition, array $values_to_update): void {
-    $values_to_update = array_diff_assoc($values_to_update, $condition);
-    $values_to_update['pending_operation'] = Op::UNCHANGED;
+  public function reportRemoteValues(array $values): void {
+    $hash = $this->hashValues($values);
     $q = $this->connection->update($this->tableName);
-    $q->condition('pending_operation', [Op::INSERT, Op::UPDATE], 'IN');
-    $this->filterQuery($q, $condition);
+    $this->filterQuery($q, $values);
+    $values_to_update = ['remote_hash' => $hash];
+    if ($this->remoteControlledFields) {
+      $missing_keys = array_diff_key($this->remoteControlledFields, $values);
+      if ($missing_keys) {
+        throw new \InvalidArgumentException(sprintf(
+          "Missing keys: %s.",
+          implode(', ', $missing_keys),
+        ));
+      }
+      foreach ($this->remoteControlledFields as $k) {
+        $values_to_update[$k] = $values[$k];
+      }
+    }
     $q->fields($values_to_update);
     $n_updated = $q->execute();
-    if (!$n_updated) {
-      // @todo Further investigation!
-      throw new \RuntimeException('The record that was supposedly synced was not found.');
+    if ($n_updated) {
+      // Existing records were updated.
+      return;
     }
+    // Create new tracking record.
+    // @todo Does this case ever occur?
+    $q = $this->connection->insert($this->tableName);
+    $values['pending_hash'] = NULL;
+    $values['remote_hash'] = $hash;
+    $q->fields($values);
+    $q->execute();
   }
 
   /**
-   * Reports that a range of objects no longer exist in Nextcloud.
+   * Reports that no objects exist in Nextcloud that match a given condition.
    *
-   * This is typically called when objects were deleted automatically following
-   * the deletion of a parent object.
+   * There are different scenarios when this is called:
+   * - A specific object tracked with this table was deleted.
+   * - A parent object no longer exists, and we know that Nextcloud
+   *   automatically removes all dependent objects.
+   *   E.g. a user no longer exists in Nextcloud, this means all the group
+   *   memberships of that user no longer exist.
+   * - A checkup finds that an object is missing.
    *
    * @param array $condition
-   *   Condition to determine which records no longer exist.
+   *   Condition to specify which objects no longer exist.
    */
   public function reportRemoteAbsence(array $condition): void {
-    // Forget tracking records, that were already marked for deletion.
+    // Forget tracking records that were already marked for deletion.
     $q = $this->connection->delete($this->tableName);
-    $q->condition('pending_operation', Op::DELETE);
     $this->filterQueryPartial($q, $condition);
+    $q->isNull('pending_hash');
     $q->execute();
+    // Update records that are not marked for deletion.
     // Mark for re-insert, if it was not marked for deletion.
     // This can happen if the target has to be recreated with new keys.
     $q = $this->connection->update($this->tableName);
-    $q->condition('pending_operation', [
-      Op::INSERT,
-      Op::DELETE,
-    ], 'NOT IN');
     $this->filterQueryPartial($q, $condition);
+    // Avoid creating records where both hashes are NULL.
+    // @todo Remove this condition once locking has been added.
+    $q->isNotNull('pending_hash');
+    $q->fields(['remote_hash' => NULL]);
+    $q->execute();
   }
 
   /**
@@ -478,16 +501,21 @@ class TrackingTable {
     // Find orphaned tuples of key values.
     // See https://stackoverflow.com/a/36694478/246724
     $q = $this->connection->select($this->tableName, 't');
-    $subquery = $this->connection
-      ->select($relationship->getSourceTableName(), 's');
+    $subquery = $this->connection->select($relationship->getSourceTableName(), 's');
     foreach ($relationship->getJoinKeys() as $local_key => $source_key) {
       $q->addField('t', $local_key);
       $q->groupBy('t.' . $local_key);
       $subquery->where("t.$local_key = s.$source_key");
       $subquery->addField('s', $source_key);
     }
+    // Find records where the remote object is tracked as existing, but the
+    // parent remote object is not tracked as existing.
+    // It is assumed that the remote object has been deleted automatically as a
+    // side effect of deleting the parent remote object. The tracking data just
+    // needs to be updated to reflect this change.
+    $subquery->isNotNull('s.remote_hash');
     $q->havingNotExists($subquery);
-    $q->condition('t.pending_operation', Op::INSERT, '!=');
+    $q->isNotNull('t.remote_hash');
     return $q;
   }
 
@@ -498,15 +526,11 @@ class TrackingTable {
    *   Alias to give to the table.
    *   Usually this can remain the default 't'.
    *   This parameter exists mainly so that calling code makes more sense.
-   * @param \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship[] $relationships
-   *   Relationships to parent tables, by alias.
-   * @param bool $require_relationships
-   *   TRUE to only fetch records with matching data for all relationships.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   Select query.
    */
-  public function select(string $alias = 't', array $relationships = [], bool $require_relationships = TRUE): SelectInterface {
+  public function select(string $alias = 't'): SelectInterface {
     $q = $this->connection->select($this->tableName, $alias);
     $q->fields($alias);
     foreach ($this->relationships as $source_alias => $relationship) {
@@ -514,9 +538,9 @@ class TrackingTable {
       foreach ($relationship->getJoinKeys() as $local_key => $source_key) {
         $join_condition->where("$alias.$local_key = $source_alias.$source_key");
       }
-      $join_condition->condition("$source_alias.pending_operation", Op::INSERT, '!=');
-      $q->addJoin(
-        $require_relationships ? 'INNER' : 'LEFT',
+      // Find objects where the parent remote object actually exists.
+      $join_condition->isNotNull("$source_alias.remote_hash");
+      $q->innerJoin(
         $relationship->getSourceTableName(),
         $source_alias,
         $join_condition,
@@ -524,6 +548,36 @@ class TrackingTable {
       $q->fields($source_alias, $relationship->getSourceFields());
     }
     return $q;
+  }
+
+  /**
+   * Generates a hash of a set of values.
+   *
+   * @param array $values
+   *   Values to hash.
+   *   Any keys that are part of the primary key will be removed.
+   *
+   * @return string|int
+   *   Hash for the given values.
+   */
+  private function hashValues(array $values): string|int {
+    if (!$this->dataFields) {
+      return 1;
+    }
+    $values = array_intersect_key($values, $this->dataFields);
+    $missing_keys = array_diff_key($this->dataFields, $values);
+    if ($missing_keys) {
+      throw new \InvalidArgumentException(sprintf("Missing keys: %s", implode(', ', $missing_keys)));
+    }
+    foreach ($values as &$value) {
+      if (is_string($value) && (string) (int) $value === $value) {
+        $value = (int) $value;
+      }
+    }
+    // Different order should produce same hash.
+    ksort($values);
+    $hash = hash('sha256', serialize($values));
+    return $hash;
   }
 
 }

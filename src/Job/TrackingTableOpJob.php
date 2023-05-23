@@ -48,7 +48,7 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
         $this->trackingTable->reportRemoteAbsence($record_orig);
       }
       else {
-        $this->trackingTable->reportRemoteValues($record_orig, $record);
+        $this->trackingTable->reportRemoteValues($record);
       }
       // Report the progress increment.
       yield 1;
@@ -71,8 +71,19 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
    */
   private function selectPendingRecords(): SelectInterface {
     $q = $this->trackingTable->select();
+    switch ($this->op) {
+      case Op::DELETE:
+        $q->isNull('t.pending_hash');
+        break;
 
-    $q->condition('t.pending_operation', $this->op);
+      case Op::INSERT:
+        $q->isNull('t.remote_hash');
+        break;
+
+      case Op::UPDATE:
+        // This comparison in SQL never passes for NULL values, which is good.
+        $q->where('t.remote_hash != t.pending_hash');
+    }
     return $q;
   }
 

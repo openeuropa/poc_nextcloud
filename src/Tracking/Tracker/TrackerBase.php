@@ -44,7 +44,7 @@ abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterf
    */
   public function selectCurrent(string $alias = 't'): SelectInterface {
     return $this->trackingTable->select($alias)
-      ->condition($alias . '.pending_operation', Op::INSERT, '!=');
+      ->isNotNull("$alias.remote_hash");
   }
 
   /**

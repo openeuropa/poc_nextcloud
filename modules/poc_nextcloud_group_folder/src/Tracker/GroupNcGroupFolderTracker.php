@@ -35,7 +35,7 @@ class GroupNcGroupFolderTracker extends TrackerBase {
           'unsigned' => TRUE,
           'not null' => TRUE,
         ])
-        ->addDataField('nc_group_folder_id', [
+        ->addRemoteControlledField('nc_group_folder_id', [
           'description' => 'Nextcloud group folder id, or NULL if not created yet.',
           'type' => 'int',
           'unsigned' => TRUE,
