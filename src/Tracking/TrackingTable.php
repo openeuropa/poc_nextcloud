@@ -391,7 +391,7 @@ class TrackingTable {
   }
 
   /**
-   * Filters a database query by primary key values.
+   * Filters a database query by (in)complete primary key values.
    *
    * @param \Drupal\Core\Database\Query\ConditionInterface $query
    *   Database query or condition.
@@ -399,42 +399,69 @@ class TrackingTable {
    *   An array with values for some of the local primary key columns.
    */
   private function filterQueryPartial(ConditionInterface $query, array $values): void {
+    self::addQueryConditions($query, $this->localKey, $values, FALSE);
     foreach (array_intersect_key($values, $this->localKey) as $k => $v) {
       $query->condition($k, $v);
     }
   }
 
   /**
-   * Filters a database query by primary key values.
+   * Filters a database query by complete primary key values.
    *
    * @param \Drupal\Core\Database\Query\ConditionInterface $query
    *   Database query or condition.
    * @param array $values
    *   A full record, or an array with values for at least all the primary key
    *   columns.
-   * @param bool $negate_remote_key
+   * @param string|null $negate_remote_key
    *   TRUE to negate the condition for the remote key.
    */
   private function filterQuery(ConditionInterface $query, array $values, bool $negate_remote_key = FALSE): void {
-    foreach ($this->localKey as $k) {
-      $query->condition($k, $values[$k] ?? throw new \InvalidArgumentException("Missing value for '$k'."));
-    }
-    if (!$negate_remote_key) {
-      // Find records where the remote key also matches.
-      foreach ($this->remoteKey as $k) {
-        $query->condition($k, $values[$k] ?? throw new \InvalidArgumentException("Missing value for '$k'."));
+    self::addQueryConditions($query, $this->localKey, $values, TRUE);
+    self::addQueryConditions($query, $this->remoteKey, $values, TRUE, $negate_remote_key);
+  }
+
+  /**
+   * Adds conditions to a database query.
+   *
+   * @param \Drupal\Core\Database\Query\ConditionInterface $condition
+   *   Query or condition to modify.
+   * @param array $keys
+   *   Map of keys.
+   * @param array $values
+   *   Associative array of values.
+   * @param bool $complete
+   *   TRUE if all keys are required.
+   * @param bool $negate
+   *   TRUE to negate the condition group.
+   */
+  private static function addQueryConditions(ConditionInterface $condition, array $keys, array $values, bool $complete, bool $negate = FALSE): void {
+    if ($complete) {
+      $missing_keys = array_diff_key($keys, $values);
+      if ($missing_keys) {
+        throw new \InvalidArgumentException(
+          sprintf(
+            "Missing keys: %s.",
+            implode(', ', $keys)),
+        );
       }
+    }
+    assert($condition->conditions()['#conjunction'] === 'AND', 'Condition groups with OR are not supported.');
+    $condition_values = array_intersect_key($values, $keys);
+    if ($negate) {
+      $subcondition = $condition->orConditionGroup();
+      foreach ($condition_values as $key => $value) {
+        $subcondition->condition($key, $value, '!=');
+      }
+      if (array_keys($subcondition->conditions()) === ['#conjunction']) {
+        throw new \InvalidArgumentException('Subcondition is empty.');
+      }
+      $condition->condition($subcondition);
     }
     else {
-      if (!$this->remoteKey) {
-        throw new \RuntimeException('Cannot apply negated remote key conditions, if remote key is empty.');
+      foreach ($condition_values as $key => $value) {
+        $condition->condition($key, $value, '=');
       }
-      // Find records where the remote key does not match.
-      $or = $query->orConditionGroup();
-      foreach ($this->remoteKey as $k) {
-        $or->condition($k, $values[$k] ?? throw new \InvalidArgumentException("Missing value for '$k'."), '!=');
-      }
-      $query->condition($or);
     }
   }
 
