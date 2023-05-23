@@ -52,8 +52,11 @@ class MulticastJob implements ProgressiveJobInterface {
       else {
         $factor = $original_estimate / $current_estimate;
       }
-      foreach ($job->run() as $increment) {
-        yield $increment * $factor;
+      if ($current_estimate !== NULL) {
+        // The job cannot be skipped.
+        foreach ($job->run() as $increment) {
+          yield $increment * $factor;
+        }
       }
       if (!$factor && $original_estimate) {
         // Make sure the progress bar ends with 100%.
@@ -65,10 +68,18 @@ class MulticastJob implements ProgressiveJobInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPendingWorkloadSize(): float|int {
+  public function getPendingWorkloadSize(): float|int|null {
     $sum = 0;
+    $skippable = TRUE;
     foreach ($this->jobs as $job) {
-      $sum += $job->getPendingWorkloadSize();
+      $size = $job->getPendingWorkloadSize();
+      if ($size !== NULL) {
+        $sum += $size;
+        $skippable = FALSE;
+      }
+    }
+    if ($skippable) {
+      return NULL;
     }
     return $sum;
   }

@@ -32,9 +32,12 @@ interface ProgressiveJobInterface {
    * This should be equal to the sum of all yielded progress increments from
    * the two other methods.
    *
-   * @return float|int
-   *   Size of the total workload. Zero if nothing to do.
+   * @return float|int|null
+   *   Size of the total workload.
+   *   Zero if the job will be really short, but still needs to be run.
+   *   NULL if the job does not need to be run at all.
+   *   Note that the result can change after other jobs have run.
    */
-  public function getPendingWorkloadSize(): float|int;
+  public function getPendingWorkloadSize(): float|int|null;
 
 }

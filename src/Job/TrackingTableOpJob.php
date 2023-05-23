@@ -58,9 +58,10 @@ class TrackingTableOpJob implements ProgressiveJobInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPendingWorkloadSize(): float|int {
+  public function getPendingWorkloadSize(): float|int|null {
     $q = $this->selectPendingRecords();
-    return (int) $q->countQuery()->execute()->fetchField();
+    // If no results, this can be skipped.
+    return (int) $q->countQuery()->execute()->fetchField() ?: NULL;
   }
 
   /**
