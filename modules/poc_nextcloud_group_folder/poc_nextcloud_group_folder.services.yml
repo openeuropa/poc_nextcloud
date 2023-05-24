@@ -41,6 +41,9 @@ services:
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
       - { name: 'module_install.uninstall_validator' }
+  Drupal\poc_nextcloud_group_folder\Hooks\FormAlter\GroupRelatedFormAlter:
+    tags:
+      - { name: 'hooks' }
   Drupal\poc_nextcloud_group_folder\Hooks\Install\InstallIntroduceGroupRelatedEntities:
     arguments:
       - '@Drupal\poc_nextcloud\Service\IteratingEntityLoader'
