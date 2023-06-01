@@ -26,22 +26,20 @@ class GroupAndRoleNcGroupTracker extends TrackerBase {
    *
    * @param \Drupal\poc_nextcloud\Tracking\TrackingTableFactory $trackingTableFactory
    *   Tracking table factory.
+   * @param \Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderTracker $groupNcGroupFolderTracker
+   *   The group to group folder tracker.
    * @param \Drupal\poc_nextcloud_group_folder\Service\DrupalGroupLoader $drupalGroupLoader
    *   Drupal group loader.
    */
   public function __construct(
     TrackingTableFactory $trackingTableFactory,
+    GroupNcGroupFolderTracker $groupNcGroupFolderTracker,
     private DrupalGroupLoader $drupalGroupLoader,
   ) {
     parent::__construct(
       NcGroupSubmit::class,
       $trackingTableFactory->create(self::TABLE_NAME)
-        ->addLocalPrimaryField('gid', [
-          'description' => 'Drupal group id',
-          'type' => 'int',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ])
+        ->addParentTable('gf', $groupNcGroupFolderTracker->trackingTable, NULL, FALSE)
         ->addLocalPrimaryField('group_role_id', [
           'description' => 'Drupal group role id',
           'type' => 'varchar',
