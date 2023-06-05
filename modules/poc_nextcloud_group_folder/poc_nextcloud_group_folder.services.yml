@@ -41,6 +41,11 @@ services:
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
       - { name: 'module_install.uninstall_validator' }
+  # @todo Remove services in 'Hooks', once autowire is supported in Hux.
+  #   See https://www.drupal.org/project/hux/issues/3363433.
+  Drupal\poc_nextcloud_group_folder\Hooks\EntityBaseFieldInfo\GroupBaseField:
+    tags:
+      - { name: 'hooks' }
   Drupal\poc_nextcloud_group_folder\Hooks\FormAlter\GroupRelatedFormAlter:
     tags:
       - { name: 'hooks' }

@@ -9,6 +9,7 @@ use Drupal\hux\Attribute\Hook;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderSubmit;
 use Drupal\poc_nextcloud\Tracking\Tracker\TrackerBase;
 use Drupal\poc_nextcloud\Tracking\TrackingTableFactory;
+use Drupal\poc_nextcloud_group_folder\Hooks\EntityBaseFieldInfo\GroupBaseField;
 
 /**
  * Queues up user data for write to Nextcloud.
@@ -72,13 +73,31 @@ class GroupNcGroupFolderTracker extends TrackerBase {
    */
   #[Hook('group_insert'), Hook('group_update')]
   public function groupWrite(GroupInterface $group): void {
-    // @todo Distinguish if group should have a group folder.
+    if (!$this->groupShouldHaveGroupFolder($group)) {
+      $this->trackingTable->queueDelete(['gid' => $group->id()]);
+      return;
+    }
     // @todo Find a better mount point pattern.
     $nc_mount_point = (string) $group->label();
     $this->trackingTable->queueWrite([
       'gid' => $group->id(),
       'nc_mount_point' => $nc_mount_point,
     ]);
+  }
+
+  /**
+   * Determines if a group should have a Nextcloud group folder.
+   *
+   * @param \Drupal\group\Entity\GroupInterface $group
+   *   The Drupal group.
+   *
+   * @return bool
+   *   TRUE, if a group folder should be created in Nextcloud.
+   *   FALSE, if none should be created, and an existing one removed.
+   */
+  private function groupShouldHaveGroupFolder(GroupInterface $group): bool {
+    $v = $group->get(GroupBaseField::FIELD_NAME)->value;
+    return (bool) $v;
   }
 
 }
