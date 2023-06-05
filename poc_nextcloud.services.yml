@@ -44,6 +44,16 @@ services:
   Drupal\poc_nextcloud\Job\Collector\JobCollector:
     tags:
       - { name: service_collector, tag: 'poc_nextcloud.sync_job', call: addJobProvider }
+  Drupal\poc_nextcloud\Service\IteratingEntityLoader:
+    arguments: ['@entity_type.manager']
+  # @todo Remove services in 'Hooks', once autowire is supported in Hux.
+  #   See https://www.drupal.org/project/hux/issues/3363433.
+  Drupal\poc_nextcloud\Hooks\Install\InstallIntroduceUsers:
+    arguments:
+      - '@Drupal\poc_nextcloud\Service\IteratingEntityLoader'
+      - '@module_handler'
+    tags:
+      - { name: 'hooks' }
   Drupal\poc_nextcloud\Database\HookSchemaRegistry:
     tags:
       - { name: 'service_collector', tag: 'poc_nextcloud.schema', call: addProvider }

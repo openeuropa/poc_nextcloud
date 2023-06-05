@@ -41,6 +41,13 @@ services:
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
       - { name: 'module_install.uninstall_validator' }
+  Drupal\poc_nextcloud_group_folder\Hooks\Install\InstallIntroduceGroupRelatedEntities:
+    arguments:
+      - '@Drupal\poc_nextcloud\Service\IteratingEntityLoader'
+      - '@module_handler'
+      - '@entity_type.manager'
+    tags:
+      - { name: 'hooks' }
   Drupal\poc_nextcloud_group_folder\Hooks\Schema\DatabaseSchema:
     tags:
       - { name: 'hooks' }
