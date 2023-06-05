@@ -5,6 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Tracking\Tracker;
 
 use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Extension\ModuleUninstallValidatorInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\poc_nextcloud\Database\SchemaProviderInterface;
 use Drupal\poc_nextcloud\Job\Collector\JobCollectorInterface;
 use Drupal\poc_nextcloud\Job\Provider\JobProviderInterface;
@@ -17,7 +19,9 @@ use Psr\Container\ContainerInterface;
  *
  * @template RecordType as array
  */
-abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterface {
+abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterface, ModuleUninstallValidatorInterface {
+
+  use StringTranslationTrait;
 
   /**
    * Constructor.
@@ -61,6 +65,37 @@ abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterf
    */
   public function getSchema(): array {
     return [$this->trackingTable->getTableName() => $this->trackingTable->getTableSchema()];
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * Prevents uninstall of the respective module, if there are still remote
+   * objects present.
+   */
+  public function validate($module): array {
+    // Get the module name from the class name.
+    // For all known cases this is good enough.
+    if (!str_starts_with(static::class, 'Drupal\\' . $module . '\\')) {
+      return [];
+    }
+    try {
+      $n = $this->trackingTable->countTrackedRemoteObjects();
+    }
+    catch (\Exception $e) {
+      // The tracking table was not properly created in the database.
+      return [];
+    }
+    if ($n <= 0) {
+      return [];
+    }
+    return [
+      $this->t('To uninstall @module, all remote objects have to be removed first. There are still @n remote objects in @table', [
+        '@module' => $module,
+        '@table' => $this->trackingTable->getTableName(),
+        '@n' => $n,
+      ]),
+    ];
   }
 
 }

@@ -12,30 +12,35 @@ services:
       - { name: 'poc_nextcloud.sync_job' }
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
+      - { name: 'module_install.uninstall_validator' }
   Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderTracker:
     tags:
       # This depends on Nextcloud group folders.
       - { name: 'poc_nextcloud.sync_job', priority: 10 }
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
+      - { name: 'module_install.uninstall_validator' }
   Drupal\poc_nextcloud_group_folder\Tracker\GroupAndRoleNcGroupFolderGroupTracker:
     tags:
       # This depends on Nextcloud group folders and Nextcloud groups.
       - { name: 'poc_nextcloud.sync_job', priority: 20 }
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
+      - { name: 'module_install.uninstall_validator' }
   Drupal\poc_nextcloud_group_folder\Tracker\GroupMembershipRoleNcUserGroupTracker:
     tags:
       # This depends on Nextcloud users and Nextcloud groups.
       - { name: 'poc_nextcloud.sync_job', priority: 20 }
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
+      - { name: 'module_install.uninstall_validator' }
   Drupal\poc_nextcloud_group_folder\Tracker\GroupNcGroupFolderReadmeTracker:
     tags:
       # This depends on Nextcloud users and Nextcloud groups.
       - { name: 'poc_nextcloud.sync_job', priority: 20 }
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
+      - { name: 'module_install.uninstall_validator' }
   Drupal\poc_nextcloud_group_folder\Hooks\Schema\DatabaseSchema:
     tags:
       - { name: 'hooks' }

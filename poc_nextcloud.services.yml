@@ -24,6 +24,11 @@ services:
     arguments: ['@database']
   Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker:
     tags:
+      # Unlike other trackers in the group folder submodule, the user tracker is
+      # not registered as uninstall validator.
+      # This allows to uninstall the module even while users still exist in
+      # Nextcloud. This is fine, because on re-install the same user accounts
+      # will be reused.
       - { name: 'poc_nextcloud.sync_job' }
       - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }

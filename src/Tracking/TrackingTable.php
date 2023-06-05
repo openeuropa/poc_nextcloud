@@ -543,6 +543,18 @@ class TrackingTable {
   }
 
   /**
+   * Counts tracked objects that are assumed to exist in the remote.
+   *
+   * @return int
+   *   Remote object count.
+   */
+  public function countTrackedRemoteObjects(): int {
+    $q = $this->connection->select($this->tableName, 't');
+    $q->isNotNull('t.remote_hash');
+    return (int) $q->countQuery()->execute()->fetchField();
+  }
+
+  /**
    * Builds a select query to find orphaned foreign key combinations.
    *
    * @param \Drupal\poc_nextcloud\Tracking\TrackingTableRelationship $relationship
