@@ -48,6 +48,12 @@ services:
     arguments: ['@entity_type.manager']
   # @todo Remove services in 'Hooks', once autowire is supported in Hux.
   #   See https://www.drupal.org/project/hux/issues/3363433.
+  Drupal\poc_nextcloud\Hooks\Cron\CronRunJobs:
+    arguments:
+      - '@Drupal\poc_nextcloud\Job\ProgressiveJobInterface'
+      - '@logger.channel.poc_nextcloud'
+    tags:
+      - { name: 'hooks' }
   Drupal\poc_nextcloud\Hooks\Install\InstallIntroduceUsers:
     arguments:
       - '@Drupal\poc_nextcloud\Service\IteratingEntityLoader'
