@@ -17,3 +17,9 @@ nextcloud group folder file acl:
   description: 'Manage access per file and folder inside the associated Nextcloud group folder'
   # @todo Determine if this really needs to be restricted.
   restrict access: TRUE
+nextcloud group folder enable:
+  title: 'Nextcloud group folder: Enable'
+  description: 'Enable Nextcloud group folder creation for a group'
+nextcloud group folder disable:
+  title: 'Nextcloud group folder: Disable'
+  description: 'Disable Nextcloud group folder creation for a group'

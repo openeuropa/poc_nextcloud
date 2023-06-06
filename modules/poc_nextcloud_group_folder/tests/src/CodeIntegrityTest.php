@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Drupal\poc_nextcloud_group_folder\GroupFolderConstants;
+use Drupal\poc_nextcloud_group_folder\Hooks\EntityBaseFieldInfo\GroupBaseField;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
 
@@ -26,7 +27,10 @@ class CodeIntegrityTest extends TestCase {
 
     // Get group permission names as in class constants.
     // These are used in code to avoid misspelled string literals.
-    $const_perm_names = array_values(GroupFolderConstants::PERMISSIONS_MAP);
+    $const_perm_names = [
+      ...array_values(GroupFolderConstants::PERMISSIONS_MAP),
+      ...array_values(GroupBaseField::PERMISSIONS),
+    ];
     sort($const_perm_names);
 
     // Both lists should be identical.
