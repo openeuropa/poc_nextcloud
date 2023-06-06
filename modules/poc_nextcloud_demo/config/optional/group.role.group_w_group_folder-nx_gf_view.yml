@@ -11,4 +11,4 @@ scope: individual
 global_role: null
 group_type: group_w_group_folder
 permissions:
-  - 'nextcloud group folder read'
+  - 'nextcloud group folder file read'
