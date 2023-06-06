@@ -1,19 +1,19 @@
 # Use machine names and labels that produce a nice alphabetic order in the UI
 # and in exported configuration.
 nextcloud group folder file read:
-  title: 'Nextcloud group folder: Read files'
+  title: 'Nextcloud group folder file: Read'
   description: 'View content in the associated Nextcloud group folder'
 nextcloud group folder file write:
-  title: 'Nextcloud group folder: Write files'
+  title: 'Nextcloud group folder file: Write'
   description: 'Edit content in the associated Nextcloud group folder'
 nextcloud group folder file share:
-  title: 'Nextcloud group folder: Share files'
+  title: 'Nextcloud group folder file: Share'
   description: 'Share content in the associated Nextcloud group folder'
 nextcloud group folder file delete:
-  title: 'Nextcloud group folder: Delete files'
+  title: 'Nextcloud group folder file: Delete'
   description: 'Delete content in the associated Nextcloud group folder'
 nextcloud group folder file acl:
-  title: 'Nextcloud group folder: Manage access per file'
+  title: 'Nextcloud group folder file: Manage access'
   description: 'Manage access per file and folder inside the associated Nextcloud group folder'
   # @todo Determine if this really needs to be restricted.
   restrict access: TRUE
