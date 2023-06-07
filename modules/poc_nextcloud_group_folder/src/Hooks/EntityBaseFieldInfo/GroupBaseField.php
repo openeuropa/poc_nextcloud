@@ -14,6 +14,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\group\Access\GroupAccessResult;
 use Drupal\group\Entity\GroupInterface;
 use Drupal\hux\Attribute\Hook;
+use Drupal\poc_nextcloud_group_folder\Plugin\Field\FieldWidget\GroupFolderWidget;
 
 /**
  * Hook implementation to declare a base field.
@@ -77,11 +78,7 @@ class GroupBaseField {
       ->setRevisionable(TRUE)
       ->setSetting('on_label', 'Create group folder')
       ->setDisplayOptions('form', [
-        'type' => 'boolean_checkbox',
-        'settings' => [
-          'display_label' => FALSE,
-        ],
-        'weight' => 0,
+        'type' => GroupFolderWidget::ID,
       ])
       ->setDisplayConfigurable('view', TRUE)
       ->setDisplayConfigurable('form', TRUE);
