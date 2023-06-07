@@ -16,6 +16,19 @@ class GroupBaseField {
   const FIELD_NAME = 'nextcloud_group_folder';
 
   /**
+   * Evaluates this field for a given group.
+   *
+   * @param \Drupal\group\Entity\GroupInterface $group
+   *   Group to evaluate.
+   *
+   * @return bool
+   *   Field value.
+   */
+  public static function evaluate(GroupInterface $group): bool {
+    return (bool) $group->get(self::FIELD_NAME)->__get('value');
+  }
+
+  /**
    * Implements hook_entity_base_field_info().
    */
   #[Hook('entity_base_field_info')]

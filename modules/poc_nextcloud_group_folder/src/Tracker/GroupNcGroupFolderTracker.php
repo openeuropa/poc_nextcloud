@@ -96,8 +96,7 @@ class GroupNcGroupFolderTracker extends TrackerBase {
    *   FALSE, if none should be created, and an existing one removed.
    */
   private function groupShouldHaveGroupFolder(GroupInterface $group): bool {
-    $v = $group->get(GroupBaseField::FIELD_NAME)->value;
-    return (bool) $v;
+    return GroupBaseField::evaluate($group);
   }
 
 }
