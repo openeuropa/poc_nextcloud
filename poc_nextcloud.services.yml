@@ -25,6 +25,7 @@ services:
   Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker:
     tags:
       - { name: 'poc_nextcloud.sync_job' }
+      - { name: 'poc_nextcloud.schema' }
       - { name: 'hooks' }
   Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderGroupSubmit: {}
   Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderReadmeSubmit: {}
@@ -38,3 +39,9 @@ services:
   Drupal\poc_nextcloud\Job\Collector\JobCollector:
     tags:
       - { name: service_collector, tag: 'poc_nextcloud.sync_job', call: addJobProvider }
+  Drupal\poc_nextcloud\Database\HookSchemaRegistry:
+    tags:
+      - { name: 'service_collector', tag: 'poc_nextcloud.schema', call: addProvider }
+  Drupal\poc_nextcloud\Hooks\Schema\DatabaseSchema:
+    tags:
+      - { name: 'hooks' }

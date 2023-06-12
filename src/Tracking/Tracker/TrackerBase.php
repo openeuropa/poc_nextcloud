@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\poc_nextcloud\Tracking\Tracker;
 
 use Drupal\Core\Database\Query\SelectInterface;
-use Drupal\hux\Attribute\Hook;
+use Drupal\poc_nextcloud\Database\SchemaProviderInterface;
 use Drupal\poc_nextcloud\Job\Collector\JobCollectorInterface;
 use Drupal\poc_nextcloud\Job\Provider\JobProviderInterface;
 use Drupal\poc_nextcloud\Tracking\RecordSubmit\TrackingRecordSubmitInterface;
@@ -17,7 +17,7 @@ use Psr\Container\ContainerInterface;
  *
  * @template RecordType as array
  */
-abstract class TrackerBase implements JobProviderInterface {
+abstract class TrackerBase implements SchemaProviderInterface, JobProviderInterface {
 
   /**
    * Constructor.
@@ -57,9 +57,8 @@ abstract class TrackerBase implements JobProviderInterface {
   }
 
   /**
-   * Implements hook_schema().
+   * {@inheritdoc}
    */
-  #[Hook('schema')]
   public function getSchema(): array {
     return [$this->trackingTable->getTableName() => $this->trackingTable->getTableSchema()];
   }
