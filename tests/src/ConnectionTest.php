@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\poc_nextcloud;
 
-use Drupal\Tests\poc_nextcloud\Tools\TrafficNoiseRemover;
 use Drupal\Tests\poc_nextcloud\Tools\TestConnection;
 use Drupal\Tests\poc_nextcloud\Tools\TestUtil;
+use Drupal\Tests\poc_nextcloud\Tools\TrafficNoiseRemover;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
 

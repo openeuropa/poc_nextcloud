@@ -18,8 +18,8 @@
     method: POST
     uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
     form_params:
-      email: Aurelie@example.com
       userid: Aurelie
+      email: Aurelie@example.com
   response:
     status: 200
     data:
