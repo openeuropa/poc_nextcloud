@@ -30,40 +30,40 @@ services:
     # ports:
     #   - 3306:3306
 
-  # See https://hub.docker.com/_/nextcloud.
   nextcloud_db:
-    image: mariadb:10.5
-    restart: always
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-    environment:
-      - MYSQL_ROOT_PASSWORD=rootpw
-      - MYSQL_PASSWORD=nextpw
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
+    extends:
+      file: resources/compose.nextcloud.yml
+      service: nextcloud_db_base
 
   nextcloud:
-    build:
-      context: ./resources/docker-image
-      dockerfile: Dockerfile
+    extends:
+      file: resources/compose.nextcloud.yml
+      service: nextcloud_base
     depends_on:
       - nextcloud_db
-    restart: always
     ports:
       - "8081:80"
     links:
       - nextcloud_db
-    volumes:
-      # Insert custom php configuration.
-      - ./resources/php-custom.ini:/usr/local/etc/php/conf.d/custom.ini
+
+  # Add a separate Nextcloud with database for unit tests.
+  nextcloud_test_db:
+    extends:
+      file: resources/compose.nextcloud.yml
+      service: nextcloud_db_base
+
+  nextcloud_test:
+    extends:
+      file: resources/compose.nextcloud.yml
+      service: nextcloud_base
+    depends_on:
+      - nextcloud_test_db
+    ports:
+      - "8091:80"
+    links:
+      - nextcloud_test_db
     environment:
-      MYSQL_PASSWORD: nextpw
-      MYSQL_DATABASE: nextcloud
-      MYSQL_USER: nextcloud
-      MYSQL_HOST: nextcloud_db
-      # By providing user and password, Nextcloud will be fully installed.
-      NEXTCLOUD_ADMIN_USER: admin
-      NEXTCLOUD_ADMIN_PASSWORD: admin
-      PHP_IDE_CONFIG: "serverName=nextcloud"
+      MYSQL_HOST: nextcloud_test_db
 
 
 #### Mac users: uncomment the "volumes" key to enable the NFS file sharing. You can find more information about Docker for Mac here: https://github.com/openeuropa/openeuropa/blob/master/docs/starting/tooling.md#using-docker-on-macos

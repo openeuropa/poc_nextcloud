@@ -132,6 +132,7 @@ class CapturingClient implements ClientInterface {
    *   Data suitable for yml.
    */
   private function packRequest(string $method, string $uri, array $options): array {
+    $uri = preg_replace('@^http://nextcloud_test@', 'http://nextcloud', $uri);
     unset($options['auth'], $options['debug'], $options['headers']);
     return ['method' => $method, 'uri' => $uri] + $options;
   }
