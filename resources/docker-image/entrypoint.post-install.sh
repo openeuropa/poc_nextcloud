@@ -21,6 +21,7 @@ set -e
 
 # Allow API requests to 'http://nextcloud/' from 'web' container.
 sudo -E -u www-data ./occ config:system:set --value=nextcloud trusted_domains 1
+sudo -E -u www-data ./occ config:system:set --value=nextcloud_test trusted_domains 2
 
 # Make user_cas use the CAS mock server from Drupal.
 sudo -E -u www-data ./occ config:app:set --value="web" user_cas cas_server_hostname

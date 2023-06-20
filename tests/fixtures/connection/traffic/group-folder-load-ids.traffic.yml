@@ -12,15 +12,7 @@
           message: OK
           totalitems: ''
           itemsperpage: ''
-        data:
-          123:
-            id: 123
-            mount_point: example_group_folder
-            groups: {  }
-            quota: '-3'
-            size: 0
-            acl: false
-            manage: {  }
+        data: {  }
 -
   request:
     method: POST
@@ -90,19 +82,11 @@
           totalitems: ''
           itemsperpage: ''
         data:
-          123:
-            id: 123
-            mount_point: example_group_folder
-            groups: {  }
-            quota: '-3'
-            size: 0
-            acl: false
-            manage: {  }
           100001:
             id: 100001
             mount_point: example
             groups: {  }
-            quota: '-3'
+            quota: -3
             size: 0
             acl: false
             manage: {  }
@@ -110,7 +94,7 @@
             id: 100002
             mount_point: example_1
             groups: {  }
-            quota: '-3'
+            quota: -3
             size: 0
             acl: false
             manage: {  }
@@ -118,7 +102,7 @@
             id: 100003
             mount_point: example_2
             groups: {  }
-            quota: '-3'
+            quota: -3
             size: 0
             acl: false
             manage: {  }

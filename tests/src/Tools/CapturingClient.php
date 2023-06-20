@@ -7,6 +7,8 @@ namespace Drupal\Tests\poc_nextcloud\Tools;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Assert;
 use Psr\Http\Message\RequestInterface;
@@ -93,29 +95,77 @@ class CapturingClient implements ClientInterface {
   public function request($method, $uri, array $options = []) {
     $request_data = $this->packRequest($method, $uri, $options);
     if (!$this->decorated) {
-      $record = $this->traffic[$this->index] ?? [];
       // Use pre-recorded request and response.
-      if ($record === []) {
-        Assert::fail('End of pre-recorded traffic reached.');
-      }
+      $record = $this->readTrafficRecord();
       Assert::assertSame($record['request'], $request_data);
       $response = $this->unpackResponse($record['response']);
+      if (empty($record['exception'])) {
+        return $response;
+      }
+      // Recreate the exception.
+      $handler = HandlerStack::create();
+      $handler->push(fn() => static function (
+        RequestInterface $request,
+        array $options,
+      ) use ($response) {
+        throw RequestException::create($request, $response);
+      });
+      $client = new Client(['handler' => $handler]);
+      $client->request($method, $uri, $options);
+      throw new \RuntimeException('The client was expected to throw an exception, but it did not.');
     }
     else {
       // Update pre-recorded request and response.
       try {
         $response = $this->decorated->request($method, $uri, $options);
       }
-      catch (GuzzleException $e) {
-        throw new \Exception('Exceptions are currently not supported in CapturingClient.', 0, $e);
+      catch (RequestException $exception) {
+        $response = $exception->getResponse();
+        if ($response === NULL) {
+          throw new \Exception(sprintf('%s exceptions without a response are currently not supported in CapturingClient.', get_class($exception)), 0, $exception);
+        }
+        $this->writeTrafficRecord([
+          'request' => $request_data,
+          'response' => $this->packResponse($response),
+          'exception' => TRUE,
+        ]);
+        throw $exception;
       }
-      $this->traffic[$this->index] = [
+      catch (GuzzleException $e) {
+        throw new \Exception(sprintf('%s exceptions are currently not supported in CapturingClient.', get_class($e)), 0, $e);
+      }
+      $this->writeTrafficRecord([
         'request' => $request_data,
         'response' => $this->packResponse($response),
-      ];
+      ]);
+      return $response;
+    }
+  }
+
+  /**
+   * Reads a record from the recorded traffic, and increments the counter.
+   *
+   * @return array
+   *   Recorded record.
+   */
+  private function readTrafficRecord(): array {
+    $record = $this->traffic[$this->index] ?? [];
+    if ($record === []) {
+      Assert::fail('End of pre-recorded traffic reached.');
     }
     ++$this->index;
-    return $response;
+    return $record;
+  }
+
+  /**
+   * Writes a traffic record.
+   *
+   * @param array $record
+   *   Record.
+   */
+  private function writeTrafficRecord(array $record): void {
+    $this->traffic[$this->index] = $record;
+    ++$this->index;
   }
 
   /**
@@ -132,6 +182,7 @@ class CapturingClient implements ClientInterface {
    *   Data suitable for yml.
    */
   private function packRequest(string $method, string $uri, array $options): array {
+    $uri = preg_replace('@^http://nextcloud_test@', 'http://nextcloud', $uri);
     unset($options['auth'], $options['debug'], $options['headers']);
     return ['method' => $method, 'uri' => $uri] + $options;
   }

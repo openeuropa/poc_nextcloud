@@ -3,5 +3,6 @@
     method: GET
     uri: 'http://nextcloud:80/non-existing-path'
   response:
-    status: 200
+    status: 404
     data: null
+  exception: true

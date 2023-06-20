@@ -34,7 +34,7 @@
           id: 100001
           mount_point: example
           groups: {  }
-          quota: '-3'
+          quota: -3
           size: 0
           acl: false
           manage: {  }
@@ -59,16 +59,10 @@
     method: GET
     uri: 'http://nextcloud:80/apps/groupfolders/folders/100001'
   response:
-    status: 200
+    status: 500
     data:
-      ocs:
-        meta:
-          status: ok
-          statuscode: 100
-          message: OK
-          totalitems: ''
-          itemsperpage: ''
-        data: false
+      message: 'OCA\GroupFolders\Folder\FolderManager::getFolder(): Return value must be of type array, bool returned in file ''/var/www/html/custom_apps/groupfolders/lib/Folder/FolderManager.php'' line 291'
+  exception: true
 -
   request:
     method: DELETE

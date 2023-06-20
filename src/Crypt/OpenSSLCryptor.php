@@ -20,6 +20,7 @@ class OpenSSLCryptor implements CryptorInterface {
    *   Algorithm for OpenSSL.
    */
   public function __construct(
+    /* @noinspection PhpInapplicableAttributeTargetDeclarationInspection */
     #[\SensitiveParameter]
     private string $secret,
     private string $cipherAlgo = 'AES-256-GCM',
@@ -88,10 +89,7 @@ class OpenSSLCryptor implements CryptorInterface {
    *   Error handler callback.
    */
   private function getExceptionErrorHandler(): callable {
-    return function (
-      int $errno,
-      string $errstr,
-    ) {
+    return static function (int $errno, string $errstr) {
       throw new ValueException(sprintf(
         'Failed to encrypt value: [%s] %s',
         $errno,

@@ -40,7 +40,7 @@ class TestConnection {
    */
   public static function fromClient(ClientInterface $client): ApiConnection {
     // @todo Make this configurable.
-    return (new ApiConnection($client, 'http://nextcloud:80/'))
+    return (new ApiConnection($client, 'http://nextcloud_test:80/'))
       // @todo Make this configurable.
       ->withAuth('admin', 'admin')
       ->withHeader('OCS-APIRequest', 'true')

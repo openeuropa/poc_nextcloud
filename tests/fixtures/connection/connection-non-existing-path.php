@@ -6,7 +6,8 @@
  */
 
 use Drupal\poc_nextcloud\Connection\ApiConnectionInterface;
-use Drupal\poc_nextcloud\Exception\ResponseInvalidJsonException;
+use Drupal\poc_nextcloud\Exception\NextcloudApiException;
+use GuzzleHttp\Exception\ClientException;
 use PHPUnit\Framework\Assert;
 
 return function (ApiConnectionInterface $connection): void {
@@ -14,8 +15,8 @@ return function (ApiConnectionInterface $connection): void {
     $connection->requestOcs('GET', 'non-existing-path');
     Assert::fail('Expected an exception.');
   }
-  catch (ResponseInvalidJsonException) {
-    // Pass.
-    Assert::assertTrue(TRUE);
+  catch (\Throwable $e) {
+    Assert::assertInstanceOf(NextcloudApiException::class, $e);
+    Assert::assertInstanceOf(ClientException::class, $e->getPrevious());
   }
 };
