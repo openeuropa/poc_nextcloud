@@ -77,8 +77,10 @@ class GroupNcGroupFolderTracker extends TrackerBase {
       $this->trackingTable->queueDelete(['gid' => $group->id()]);
       return;
     }
-    // @todo Find a better mount point pattern.
-    $nc_mount_point = (string) $group->label();
+    $label = (string) $group->label();
+    // Use a sanitized version of the group label as the mount point.
+    // @todo Does the length need to be limited?
+    $nc_mount_point = preg_replace('@\W+@', '-', $label);
     $this->trackingTable->queueWrite([
       'gid' => $group->id(),
       'nc_mount_point' => $nc_mount_point,
