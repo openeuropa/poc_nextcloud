@@ -80,7 +80,7 @@ class GroupBaseField {
       ->setDisplayOptions('form', [
         'type' => GroupFolderWidget::ID,
       ])
-      ->setDisplayConfigurable('view', TRUE)
+      ->setDisplayConfigurable('view', FALSE)
       ->setDisplayConfigurable('form', TRUE);
 
     return $fields;
