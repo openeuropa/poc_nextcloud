@@ -101,4 +101,36 @@ class GroupNcGroupFolderTracker extends TrackerBase {
     return GroupBaseField::evaluate($group);
   }
 
+  /**
+   * Finds a tracking record for a given Drupal group.
+   *
+   * @param \Drupal\group\Entity\GroupInterface $group
+   *   Drupal group.
+   *
+   * @return array|null
+   *   Tracking record, or NULL if none found.
+   *   This only returns records users that actually exist in Nextcloud, even
+   *   those marked for deletion.
+   *
+   * @phpstan-return array{
+   *   nc_group_folder_id: int,
+   *   nc_mount_point: string,
+   * }|null
+   */
+  public function findGroupFolder(GroupInterface $group) {
+    $q = $this->selectCurrent();
+    $q->condition('t.gid', $group->id());
+    $record = $q->execute()->fetchAssoc() ?: NULL;
+    if (!$record) {
+      return NULL;
+    }
+    // Remove keys that are not part of the actual Nextcloud data.
+    return [
+      // Convert stringified integer.
+      // The id can't be NULL, unless the data in the table is damaged.
+      'nc_group_folder_id' => (int) $record['nc_group_folder_id'],
+      'nc_mount_point' => $record['nc_mount_point'],
+    ];
+  }
+
 }

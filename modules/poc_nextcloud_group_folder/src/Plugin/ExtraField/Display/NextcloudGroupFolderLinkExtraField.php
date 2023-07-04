@@ -95,9 +95,7 @@ class NextcloudGroupFolderLinkExtraField extends ExtraFieldDisplayFormattedBase 
     if (!$entity instanceof GroupInterface) {
       return [];
     }
-    $group_folder_record = $this->groupFolderTracker->selectCurrent()
-      ->condition('t.gid', $entity->id())
-      ->execute()->fetchAssoc() ?: NULL;
+    $group_folder_record = $this->groupFolderTracker->findGroupFolder($entity);
     if (!$group_folder_record) {
       return [];
     }
