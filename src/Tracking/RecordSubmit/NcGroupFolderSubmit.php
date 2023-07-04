@@ -43,7 +43,11 @@ class NcGroupFolderSubmit implements TrackingRecordSubmitInterface {
         if ($group_folder_id !== NULL) {
           throw new \Exception('Tracking record is marked for insert already has a group folder id.');
         }
-        $record['nc_group_folder_id'] = $this->groupFolderEndpoint->insertWithMountPoint($mount_point);
+        $group_folder_id = $this->groupFolderEndpoint->insertWithMountPoint($mount_point);
+        $record['nc_group_folder_id'] = $group_folder_id;
+        // Always enable ACL. Otherwise, a new tracker would be needed to enable
+        // or disable it based on various events.
+        $this->groupFolderEndpoint->setAcl($group_folder_id, TRUE);
         break;
 
       case Op::DELETE:
