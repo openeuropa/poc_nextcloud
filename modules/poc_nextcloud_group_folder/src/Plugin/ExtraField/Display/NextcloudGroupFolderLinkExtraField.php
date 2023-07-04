@@ -77,7 +77,7 @@ class NextcloudGroupFolderLinkExtraField extends ExtraFieldDisplayFormattedBase 
    * {@inheritdoc}
    */
   public function getLabel(): MarkupInterface {
-    return $this->t('Nextcloud profile link');
+    return $this->t('Group documents (Nextcloud)');
   }
 
   /**
