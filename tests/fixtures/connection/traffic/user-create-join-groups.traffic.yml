@@ -1,0 +1,250 @@
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: failure
+          statuscode: 404
+          message: 'User does not exist'
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/groups'
+    query:
+      search: test_group
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          groups: {  }
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users'
+    form_params:
+      userid: Aurelie
+      email: aurelie@example.com
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          id: Aurelie
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/groups'
+    form_params:
+      groupid: test_group
+      displayname: 'Test group'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          groups: {  }
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+    form_params:
+      groupid: test_group
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          groups:
+            - test_group
+-
+  request:
+    method: POST
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+    form_params:
+      groupid: test_group
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          groups:
+            - test_group
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+    form_params:
+      groupid: test_group
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          groups: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+    form_params:
+      groupid: test_group
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: GET
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie/groups'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data:
+          groups: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/users/Aurelie'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
+-
+  request:
+    method: DELETE
+    uri: 'http://nextcloud:80/ocs/v1.php/cloud/groups/test_group'
+  response:
+    status: 200
+    data:
+      ocs:
+        meta:
+          status: ok
+          statuscode: 100
+          message: OK
+          totalitems: ''
+          itemsperpage: ''
+        data: {  }
