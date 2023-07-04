@@ -3,6 +3,8 @@ status: true
 dependencies:
   config:
     - group.type.group_w_group_folder
+  module:
+    - poc_nextcloud_group_folder
 id: group.group_w_group_folder.default
 targetEntityType: group
 bundle: group_w_group_folder
@@ -15,6 +17,12 @@ content:
     settings:
       size: 60
       placeholder: ''
+    third_party_settings: {  }
+  nextcloud_group_folder:
+    type: nextcloud_group_folder
+    weight: 0
+    region: content
+    settings: {  }
     third_party_settings: {  }
   status:
     type: boolean_checkbox
