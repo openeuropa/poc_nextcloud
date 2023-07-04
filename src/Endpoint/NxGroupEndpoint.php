@@ -89,17 +89,22 @@ class NxGroupEndpoint {
   }
 
   /**
-   * Deletes a group.
+   * Deletes a group, if it exists.
    *
    * @param string $group_id
    *   Group id.
    *
+   * @return bool
+   *   TRUE if a group was deleted, FALSE if it did not exist.
+   *
    * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
+   *   The API did not behave as expected.
    */
-  public function delete(string $group_id): void {
-    $this->groupPath($group_id)
+  public function delete(string $group_id): bool {
+    return NULL !== $this->groupPath($group_id)
       ->requestOcs('DELETE')
-      ->throwIfFailure();
+      ->nullIfStatusCode(101)
+      ?->throwIfFailure();
   }
 
   /**
