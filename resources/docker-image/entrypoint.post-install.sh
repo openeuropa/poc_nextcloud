@@ -31,6 +31,8 @@ sudo -E -u www-data ./occ config:app:set --value="/build/cas-mock-server" user_c
 sudo -E -u www-data ./occ config:app:set --value="EU Login" user_cas cas_login_button_label
 # Do not auto-create users.
 sudo -E -u www-data ./occ config:app:set --value="0" user_cas cas_autocreate
+# Allow to bypass cas login. This is needed for convenient admin access.
+sudo -E -u www-data ./occ config:app:set --value="0" user_cas cas_force_login
 
 # Prevent the script from running again on next startup.
 touch "$0.done"
