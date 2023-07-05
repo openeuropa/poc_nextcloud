@@ -8,3 +8,4 @@ type: module
 dependencies:
   # @todo Split group functionality into a submodule.
   - group:group
+  - hux:hux

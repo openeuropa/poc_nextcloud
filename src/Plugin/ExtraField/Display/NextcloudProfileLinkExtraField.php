@@ -10,9 +10,8 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\extra_field\Plugin\ExtraFieldDisplayFormattedBase;
 use Drupal\extra_field\Plugin\ExtraFieldDisplayInterface;
-use Drupal\poc_nextcloud\Exception\ServiceNotAvailableException;
 use Drupal\poc_nextcloud\Service\NextcloudUrlBuilder;
-use Drupal\poc_nextcloud\Service\NextcloudUserMap;
+use Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -41,8 +40,8 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
    *   Plugin id.
    * @param array $plugin_definition
    *   Plugin definition.
-   * @param \Drupal\poc_nextcloud\Service\NextcloudUserMap $nextcloudUserMap
-   *   Service to get Nextcloud user for Drupal user.
+   * @param \Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker $userTracker
+   *   Nextcloud user tracker.
    * @param \Drupal\poc_nextcloud\Service\NextcloudUrlBuilder $nextcloudUrlBuilder
    *   Service to build links to Nextcloud.
    */
@@ -50,7 +49,7 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
     array $configuration,
     string $plugin_id,
     array $plugin_definition,
-    private NextcloudUserMap $nextcloudUserMap,
+    private UserNcUserTracker $userTracker,
     private NextcloudUrlBuilder $nextcloudUrlBuilder,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -65,22 +64,13 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
     $plugin_id,
     $plugin_definition
   ): ExtraFieldDisplayInterface {
-    try {
-      return new self(
-        $configuration,
-        $plugin_id,
-        $plugin_definition,
-        $container->get(NextcloudUserMap::class),
-        $container->get(NextcloudUrlBuilder::class),
-      );
-    }
-    catch (ServiceNotAvailableException) {
-      return new EmptyExtraField(
-        $configuration,
-        $plugin_id,
-        $plugin_definition,
-      );
-    }
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get(UserNcUserTracker::class),
+      $container->get(NextcloudUrlBuilder::class),
+    );
   }
 
   /**
@@ -99,27 +89,23 @@ class NextcloudProfileLinkExtraField extends ExtraFieldDisplayFormattedBase impl
 
   /**
    * {@inheritdoc}
-   *
-   * @throws \Drupal\poc_nextcloud\Exception\NextcloudApiException
-   *
-   * @todo Catch exceptions here.
    */
   public function viewElements(ContentEntityInterface $entity): array {
     // @todo Check permission of current user.
     if (!$entity instanceof UserInterface) {
       return [];
     }
-    $nextcloud_user = $this->nextcloudUserMap->getNextcloudUser($entity);
-    if ($nextcloud_user === NULL) {
+    $user_record = $this->userTracker->findCurrentUserRecord($entity);
+    if ($user_record === NULL) {
       return [];
     }
-    $url = $this->nextcloudUrlBuilder->url('u/' . urlencode($nextcloud_user->getId()));
+    $url = $this->nextcloudUrlBuilder->url('u/' . urlencode($user_record['nc_user_id']));
     return [
       // @todo Set proper cache info.
       '#cache' => ['max-age' => 0],
       '#type' => 'link',
       '#url' => $url,
-      '#title' => $nextcloud_user->getId(),
+      '#title' => $user_record['nc_user_id'],
     ];
   }
 

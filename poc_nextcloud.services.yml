@@ -20,16 +20,53 @@ services:
   Drupal\poc_nextcloud\Endpoint\NxGroupEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxGroupFolderEndpoint: {}
   Drupal\poc_nextcloud\Endpoint\NxWebdavEndpoint: {}
-  Drupal\poc_nextcloud\EntityObserver\NextcloudUsers:
+  Drupal\poc_nextcloud\Tracking\TrackingTableFactory:
+    arguments: ['@database']
+  Drupal\poc_nextcloud\Tracking\Tracker\UserNcUserTracker:
+    tags:
+      # Unlike other trackers in the group folder submodule, the user tracker is
+      # not registered as uninstall validator.
+      # This allows to uninstall the module even while users still exist in
+      # Nextcloud. This is fine, because on re-install the same user accounts
+      # will be reused.
+      - { name: 'poc_nextcloud.sync_job' }
+      - { name: 'poc_nextcloud.schema' }
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderGroupSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderReadmeSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupFolderSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcGroupSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcUserSubmit: {}
+  Drupal\poc_nextcloud\Tracking\RecordSubmit\NcUserGroupSubmit: {}
+  Drupal\poc_nextcloud\Job\Runner\JobBatchRunner: {}
+  Drupal\poc_nextcloud\Job\ProgressiveJobInterface:
+    class: Drupal\poc_nextcloud\Job\MulticastJob
+    factory: [~, fromJobCollector]
+  Drupal\poc_nextcloud\Job\Collector\JobCollector:
+    tags:
+      - { name: service_collector, tag: 'poc_nextcloud.sync_job', call: addJobProvider }
+  Drupal\poc_nextcloud\Service\IteratingEntityLoader:
+    arguments: ['@entity_type.manager']
+  # @todo Remove services in 'Hooks', once autowire is supported in Hux.
+  #   See https://www.drupal.org/project/hux/issues/3363433.
+  Drupal\poc_nextcloud\Hooks\Cron\CronRunJobs:
     arguments:
-      # Explicitly set arguments that cannot be autowired.
-      # See https://www.drupal.org/project/drupal/issues/3336739
-      Psr\Log\LoggerInterface: '@logger.channel.poc_nextcloud'
-  poc_nextcloud.entity_observer:
-    class: Drupal\poc_nextcloud\EntityObserver\Multicast
-    factory: [~, fromServiceIdsWithEmptyFallback]
-    arguments:
-      - '@service_container'
+      - '@Drupal\poc_nextcloud\Job\ProgressiveJobInterface'
       - '@logger.channel.poc_nextcloud'
-      -
-        - Drupal\poc_nextcloud\EntityObserver\NextcloudUsers
+    tags:
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud\Hooks\FormAlter\UserFormAlter:
+    tags:
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud\Hooks\Install\InstallIntroduceUsers:
+    arguments:
+      - '@Drupal\poc_nextcloud\Service\IteratingEntityLoader'
+      - '@module_handler'
+    tags:
+      - { name: 'hooks' }
+  Drupal\poc_nextcloud\Database\HookSchemaRegistry:
+    tags:
+      - { name: 'service_collector', tag: 'poc_nextcloud.schema', call: addProvider }
+  Drupal\poc_nextcloud\Hooks\Schema\DatabaseSchema:
+    tags:
+      - { name: 'hooks' }

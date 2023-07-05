@@ -5,10 +5,10 @@ dependencies:
     - group.type.group_w_group_folder
 id: group_w_group_folder-nx_gf_view
 label: 'View documents'
-weight: 4
-internal: false
-audience: member
+weight: 3
+admin: false
+scope: individual
+global_role: null
 group_type: group_w_group_folder
-permissions_ui: true
 permissions:
-  - 'nextcloud group folder read'
+  - 'nextcloud group folder file read'

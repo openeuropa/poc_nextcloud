@@ -276,7 +276,7 @@ class NxUserEndpoint {
   }
 
   /**
-   * Adds a user to a group.
+   * Adds a user to a group, if not already a member.
    *
    * @param string $user_id
    *   User id.
@@ -292,7 +292,7 @@ class NxUserEndpoint {
   }
 
   /**
-   * Removes a user from a group.
+   * Removes a user from a group, if currently a member.
    *
    * @param string $user_id
    *   User id.
