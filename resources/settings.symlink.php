@@ -17,6 +17,8 @@ $config['oe_authentication.settings']['validation_path'] = 'p3/serviceValidate';
 $config['cas_mock_server.settings']['login_form']['title'] = 'EU Login';
 // Username does not work, it has to be the email address.
 $config['cas_mock_server.settings']['login_form']['email'] = 'E-mail address';
+// Don't let the mock accounts expire so soon.
+$config['cas_mock_server.settings']['users']['expire'] = 60 * 60 * 24 * 360;
 
 // Configuration overrides for 'poc_nextcloud' module.
 // Credentials of the API user.
