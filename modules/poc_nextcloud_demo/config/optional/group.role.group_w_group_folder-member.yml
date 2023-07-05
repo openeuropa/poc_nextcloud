@@ -11,4 +11,5 @@ admin: false
 scope: insider
 global_role: authenticated
 group_type: group_w_group_folder
-permissions: {  }
+permissions:
+  - 'view group'
